@@ -20,7 +20,7 @@ public class TitleFile {
         this.codeBank = codeBank;
         this.codeFilial = codeFilial;
         this.nameAES = nameAES;
-        this.number++;
+        number++;
     }
 
     @Override

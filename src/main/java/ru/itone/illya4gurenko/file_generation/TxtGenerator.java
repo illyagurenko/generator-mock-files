@@ -6,6 +6,8 @@ import ru.itone.illya4gurenko.model.TitleFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,18 +15,27 @@ import java.time.LocalDateTime;
 
 public class TxtGenerator implements FileGenerator {
     private final DataGenerator generator;
+    private final Path outputDir;
+    private final Charset charset;
 
-    public TxtGenerator(DataGenerator generator) {
+    public TxtGenerator(DataGenerator generator, Path outputDir, Charset charset) {
         this.generator = generator;
+        this.outputDir = outputDir;
+        this.charset = charset;
+        try {
+            Files.createDirectories(outputDir);
+        } catch (IOException e) {
+            throw new RuntimeException("error create dir " + outputDir, e);
+        }
     }
 
     @Override
     public void generateFile(int codeBank, int codeFilial, String nameAES, int countRecords, int countFiles) throws IOException {
         for (int i = 0; i < countFiles; i++) {
             TitleFile titleFile = new TitleFile(codeBank, codeFilial, nameAES);
-            Path path = Paths.get(titleFile.toString() + ".txt");
+            Path path = outputDir.resolve(titleFile.toString());
 
-            try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
                 Header header = new Header();
                 writer.write(header.toString());
                 writer.newLine();
@@ -46,9 +57,9 @@ public class TxtGenerator implements FileGenerator {
     public void generateFile(int codeBank, int codeFilial, String nameAES, int countRecords, int countFiles, LocalDateTime inTime) throws IOException {
         for (int i = 0; i < countFiles; i++) {
             TitleFile titleFile = new TitleFile(codeBank, codeFilial, nameAES);
-            Path path = Paths.get(titleFile.toString() + ".txt");
+            Path path = outputDir.resolve(titleFile.toString());
 
-            try (BufferedWriter writer = Files.newBufferedWriter(path)) {
+            try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
                 Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());
                 writer.write(header.toString());
                 writer.newLine();
