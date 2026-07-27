@@ -9,28 +9,31 @@ import java.util.Properties;
 public class AppConfig {
     private static final Properties PROPERTIES = new Properties();
 
-    static{
+    static {
         try (InputStream input = AppConfig.class.getClassLoader()
                 .getResourceAsStream("application.properties")) {
             if (input == null) {
                 throw new RuntimeException("application.properties not found");
             }
             PROPERTIES.load(input);
+
+            String logPath = PROPERTIES.getProperty("log.file-path", "./logs/app.log");
+            System.setProperty("dynamic.log.path", logPath);
         } catch (IOException e) {
             throw new RuntimeException("error load configuration", e);
         }
-
     }
+
     public static int getServerPort() {
         return Integer.parseInt(PROPERTIES.getProperty("server.port", "8080"));
     }
 
-    public static String getServerEndpoint() {
-        return PROPERTIES.getProperty("server.endpoint", "/api/parametres");
+    public static String getServerEndpointPost() {
+        return PROPERTIES.getProperty("server.endpoint.post", "/api/parametres");
     }
 
     public static Path getFileOut() {
-        return Path.of(PROPERTIES.getProperty("file.output-dir", "./generated"));
+        return Path.of(PROPERTIES.getProperty("file.out", "./generated"));
     }
 
     public static Charset getFileCharset() {

@@ -3,16 +3,17 @@ package ru.itone.illya4gurenko.model;
 import java.time.LocalDate;
 
 public class TitleFile {
-    private static final char firstChar = 'Z';
-    private static final char point = '.';
-    private static final char line = '_';
-    private static final String enroll = "ENROLL";
+    private static final char FIRST_CHAR = 'Z';
+    private static final char POINT = '.';
+    private static final char LINE = '_';
+    private static final String ENROLL = "ENROLL";
 
-    private int codeBank;
-    private int codeFilial;
-    private String nameAES;
+    private final int codeBank;
+    private final int codeFilial;
+    private final String nameAES;
+    private final int julianDate;
+
     private static int number;
-    private int julianDate;
 
     public TitleFile(int codeBank, int codeFilial, String nameAES) {
         LocalDate date = LocalDate.now();
@@ -26,6 +27,6 @@ public class TitleFile {
     @Override
     public String toString() {
         return String.format("%1s%3d%3d%1s" + nameAES + "%1s%6s" + number + "%1s%3d",
-                firstChar, codeBank, codeFilial, point, line, enroll, point, julianDate);
+                FIRST_CHAR, codeBank, codeFilial, POINT, LINE, ENROLL, POINT, julianDate);
     }
 }

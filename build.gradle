@@ -17,6 +17,8 @@ dependencies {
     implementation("net.datafaker:datafaker:2.7.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
+    implementation 'org.slf4j:slf4j-api:2.0.18'
+    implementation 'ch.qos.logback:logback-classic:1.6.0'
 }
 
 test {

@@ -8,8 +8,8 @@ public class Header {
     private final ProcType procType;
     private final LocalDate sendDate;
     private final LocalTime sendTime;
-    private static final char header = 'H';
-    private static final char filler = ' ';
+    private static final char HEADER = 'H';
+    private static final char FILLER = ' ';
 
     public Header(LocalDate sendDate, LocalTime sendTime) {
         this.procType = ProcType.INTIME;
@@ -26,12 +26,12 @@ public class Header {
     @Override
     public String toString() {
         return String.format("%1s%1s%8s%1s%6s%1s%-9s",
-                header,
-                filler,
+                HEADER,
+                FILLER,
                 sendDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-                filler,
+                FILLER,
                 sendTime.format(DateTimeFormatter.ofPattern("HHmmss")),
-                filler,
+                FILLER,
                 procType
         );
     }

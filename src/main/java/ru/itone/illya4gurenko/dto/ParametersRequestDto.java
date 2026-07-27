@@ -2,7 +2,7 @@ package ru.itone.illya4gurenko.dto;
 
 import java.time.LocalDateTime;
 
-public record ParametersRequest(
+public record ParametersRequestDto(
         int codeBank,
         int codeFilial,
         String nameAES,
