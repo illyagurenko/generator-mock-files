@@ -1,4 +1,4 @@
-package ru.itone.illya4gurenko.file_generation;
+package ru.itone.illya4gurenko.service;
 
 public interface DataGenerator {
     String generateData();

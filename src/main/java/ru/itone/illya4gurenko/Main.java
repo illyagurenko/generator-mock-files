@@ -5,10 +5,10 @@ import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itone.illya4gurenko.config.AppConfig;
-import ru.itone.illya4gurenko.file_generation.DataFakerGeneratorService;
-import ru.itone.illya4gurenko.file_generation.DataGenerator;
-import ru.itone.illya4gurenko.file_generation.FileGenerator;
-import ru.itone.illya4gurenko.file_generation.SimpleFileGeneratorService;
+import ru.itone.illya4gurenko.service.DataFakerGeneratorService;
+import ru.itone.illya4gurenko.service.DataGenerator;
+import ru.itone.illya4gurenko.service.FileGenerator;
+import ru.itone.illya4gurenko.service.SimpleFileGeneratorService;
 import ru.itone.illya4gurenko.handler.ParametersHandler;
 
 import java.io.IOException;

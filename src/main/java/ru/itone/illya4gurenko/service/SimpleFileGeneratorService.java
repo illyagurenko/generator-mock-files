@@ -1,4 +1,4 @@
-package ru.itone.illya4gurenko.file_generation;
+package ru.itone.illya4gurenko.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,5 +87,4 @@ public class SimpleFileGeneratorService implements FileGenerator {
         }
         log.info("generate intime files ending");
     }
-
 }

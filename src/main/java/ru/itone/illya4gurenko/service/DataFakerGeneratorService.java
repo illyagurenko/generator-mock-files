@@ -1,4 +1,4 @@
-package ru.itone.illya4gurenko.file_generation;
+package ru.itone.illya4gurenko.service;
 
 import net.datafaker.Faker;
 import org.slf4j.Logger;

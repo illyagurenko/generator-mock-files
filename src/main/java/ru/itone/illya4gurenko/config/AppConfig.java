@@ -1,5 +1,7 @@
 package ru.itone.illya4gurenko.config;
 
+import ru.itone.illya4gurenko.security.AESCryptoService;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -8,6 +10,7 @@ import java.util.Properties;
 
 public class AppConfig {
     private static final Properties PROPERTIES = new Properties();
+    private static AESCryptoService cryptoService;
 
     static {
         try (InputStream input = AppConfig.class.getClassLoader()
