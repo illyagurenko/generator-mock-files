@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itone.illya4gurenko.config.AppConfig;
+import ru.itone.illya4gurenko.security.AuthService;
 import ru.itone.illya4gurenko.service.DataFakerGeneratorService;
 import ru.itone.illya4gurenko.service.DataGenerator;
 import ru.itone.illya4gurenko.service.FileGenerator;
@@ -27,7 +28,9 @@ public class Main {
 
             DataGenerator dataGenerator = new DataFakerGeneratorService(AppConfig.getFakerLocale());
             FileGenerator fileGenerator = new SimpleFileGeneratorService(dataGenerator, AppConfig.getFileOut(), AppConfig.getFileCharset());
-            ParametersHandler parametersHandler = new ParametersHandler(fileGenerator);
+
+            AuthService authService = new AuthService(AppConfig.getCryptoService());
+            ParametersHandler parametersHandler = new ParametersHandler(fileGenerator, authService);
 
             log.info("init httpserver on port {}", port);
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
@@ -41,14 +44,14 @@ public class Main {
 
         } catch (IOException e) {
             if (log != null) {
-                log.error("io error", e);
+                log.error("io error on startup", e);
             } else {
                 e.printStackTrace();
             }
             System.exit(1);
         } catch (Exception e) {
             if (log != null) {
-                log.error("error statrt app", e);
+                log.error("error during app startup", e);
             } else {
                 e.printStackTrace();
             }

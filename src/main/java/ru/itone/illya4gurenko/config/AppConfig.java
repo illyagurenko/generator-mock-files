@@ -70,9 +70,9 @@ public class AppConfig {
     }
 
     private static void initCryptoService() {
-        String keyPath = System.getProperty("gpb.dppt.cld.midnight.key",
+        String keyInput = System.getProperty("crypto.key",
                 PROPERTIES.getProperty("crypto.key.path"));
-        cryptoService = new AESCryptoService(keyPath);
+        cryptoService = new AESCryptoService(keyInput);
     }
 
     public static AESCryptoService getCryptoService() {

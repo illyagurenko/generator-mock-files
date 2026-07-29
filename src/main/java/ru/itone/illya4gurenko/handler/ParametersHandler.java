@@ -2,11 +2,13 @@ package ru.itone.illya4gurenko.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itone.illya4gurenko.dto.ParametersRequestDto;
+import ru.itone.illya4gurenko.security.AuthService;
 import ru.itone.illya4gurenko.service.FileGenerator;
 
 import java.io.IOException;
@@ -16,12 +18,15 @@ import java.io.InputStream;
 public class ParametersHandler implements HttpHandler {
     private static final Logger log = LoggerFactory.getLogger(ParametersHandler.class);
     private final FileGenerator fileGenerator;
+    private final AuthService authService;
+
 
     private final ObjectMapper mapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
-    public ParametersHandler(FileGenerator fileGenerator) {
+    public ParametersHandler(FileGenerator fileGenerator, AuthService authService) {
         this.fileGenerator = fileGenerator;
+        this.authService = authService;
         log.info("init post handler");
     }
 
@@ -36,9 +41,19 @@ public class ParametersHandler implements HttpHandler {
             exchange.sendResponseHeaders(405, -1);
             return;
         }
+
+        Headers headers = exchange.getRequestHeaders();
+        String authUser = headers.getFirst("X-Auth-User");
+        String authPasswordEncrypted = headers.getFirst("X-Auth-Password");
+
+        if (!authService.authorize(authUser, authPasswordEncrypted)) {
+            log.warn("Unauthorized access attempt from client: {}. User: {}", remoteAddress, authUser);
+            exchange.sendResponseHeaders(401, -1);
+            return;
+        }
         try (InputStream is = exchange.getRequestBody()) {
             ParametersRequestDto request = mapper.readValue(is, ParametersRequestDto.class);
-            log.info("success read JSON-body by {}, bank: {}, count files: {}, count records: {}",
+            log.info("success auth and read JSON-body by {}, bank: {}, count files: {}, count records: {}",
                     remoteAddress, request.codeBank(), request.countFiles(), request.countRecords());
             try {
                 if (request.inTime() == null) {
