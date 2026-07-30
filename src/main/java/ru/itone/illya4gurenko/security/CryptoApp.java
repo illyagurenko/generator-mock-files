@@ -15,10 +15,10 @@ public class CryptoApp {
 
             if ("1".equals(cmd)) {
                 System.out.println("input password: ");
-                System.out.println("res: " + crypto.encrypt(scanner.nextLine()));
+                System.out.println("res: " + "[" + crypto.encrypt(scanner.nextLine()) + "]");
             } else if ("2".equals(cmd)) {
                 System.out.println("input encode password: ");
-                System.out.println("res: " + crypto.decrypt(scanner.nextLine()));
+                System.out.println("res: " + "[" + crypto.decrypt(scanner.nextLine())+ "]");
             } else if ("0".equals(cmd)) {
                 break;
             }

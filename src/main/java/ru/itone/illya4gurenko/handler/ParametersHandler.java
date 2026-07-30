@@ -32,55 +32,85 @@ public class ParametersHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-        String remoteAddress = exchange.getRemoteAddress().toString();
-        log.debug("get http-request. method: {}, client: {}, uri: {}", method, remoteAddress, exchange.getRequestURI());
 
-        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-            log.info("uncorrected http method: {} by client {}, must be post", method, remoteAddress);
-            exchange.sendResponseHeaders(405, -1);
-            return;
-        }
+        try {
+            String method = exchange.getRequestMethod();
+            String remoteAddress = exchange.getRemoteAddress().toString();
+            log.debug("get http-request. method: {}, client: {}, uri: {}", method, remoteAddress, exchange.getRequestURI());
 
-        Headers headers = exchange.getRequestHeaders();
-        String authUser = headers.getFirst("X-Auth-User");
-        String authPasswordEncrypted = headers.getFirst("X-Auth-Password");
-
-        if (!authService.authorize(authUser, authPasswordEncrypted)) {
-            log.warn("Unauthorized access attempt from client: {}. User: {}", remoteAddress, authUser);
-            exchange.sendResponseHeaders(401, -1);
-            return;
-        }
-        try (InputStream is = exchange.getRequestBody()) {
-            ParametersRequestDto request = mapper.readValue(is, ParametersRequestDto.class);
-            log.info("success auth and read JSON-body by {}, bank: {}, count files: {}, count records: {}",
-                    remoteAddress, request.codeBank(), request.countFiles(), request.countRecords());
-            try {
-                if (request.inTime() == null) {
-                    log.debug("generate file without intime parameter");
-                    fileGenerator.generateFile(
-                            request.codeBank(),
-                            request.codeFilial(),
-                            request.nameAES(),
-                            request.countRecords(),
-                            request.countFiles());
-                } else {
-                    log.debug("generate file with intime parameter");
-                    fileGenerator.generateFile(
-                            request.codeBank(),
-                            request.codeFilial(),
-                            request.nameAES(),
-                            request.countRecords(),
-                            request.countFiles(),
-                            request.inTime());
-                }
-
-            } catch (IOException e) {
-                log.error("generate file error for client: {}", remoteAddress, e);
-                throw new RuntimeException("generate file error", e);
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                log.info("uncorrected http method: {} by client {}, must be post", method, remoteAddress);
+                exchange.sendResponseHeaders(405, -1);
+                return;
             }
+
+            Headers headers = exchange.getRequestHeaders();
+            String authUser = headers.getFirst("X-Auth-User");
+            String authPasswordEncrypted = headers.getFirst("X-Auth-Password");
+
+            if (!authService.authorize(authUser, authPasswordEncrypted)) {
+                log.warn("Unauthorized access attempt from client: {}. User: {}", remoteAddress, authUser);
+                exchange.sendResponseHeaders(401, -1);
+                return;
+            }
+
+            Runnable runnable = () -> {
+                InputStream is = null;
+                try {
+                    is = exchange.getRequestBody();
+                    ParametersRequestDto request = null;
+                    try {
+                        request = mapper.readValue(is, ParametersRequestDto.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    log.info("success auth and read JSON-body by {}, bank: {}, count files: {}, count records: {}",
+                            remoteAddress, request.codeBank(), request.countFiles(), request.countRecords());
+                    try {
+                        if (request.inTime() == null) {
+                            log.debug("generate file without intime parameter");
+                            fileGenerator.generateFile(
+                                    request.codeBank(),
+                                    request.codeFilial(),
+                                    request.nameAES(),
+                                    request.countRecords(),
+                                    request.countFiles());
+                        } else {
+                            log.debug("generate file with intime parameter");
+                            fileGenerator.generateFile(
+                                    request.codeBank(),
+                                    request.codeFilial(),
+                                    request.nameAES(),
+                                    request.countRecords(),
+                                    request.countFiles(),
+                                    request.inTime());
+                        }
+
+                    } catch (IOException e) {
+                        log.error("generate file error for client: {}", remoteAddress, e);
+                        throw new RuntimeException("generate file error", e);
+                    }
+                } finally {
+                    try {
+                        if (is != null) {
+                            is.close();
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                }
+            };
+
+            Thread thread = new Thread(runnable);
+            thread.start();
             log.info("generate for {} success ending, http 200.", remoteAddress);
             exchange.sendResponseHeaders(200, -1);
+
+        } catch (Exception e) {
+            log.error("request error: ", e);
+            throw e;
         }
+
     }
 }
