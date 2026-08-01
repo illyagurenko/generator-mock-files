@@ -1,101 +1,66 @@
 package ru.itone.illya4gurenko.config;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
-import org.slf4j.LoggerFactory;
-import ru.itone.illya4gurenko.security.AESCryptoService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 public class AppConfig {
-    private static final Properties PROPERTIES = new Properties();
-    private static AESCryptoService cryptoService;
+    private static final AppConfig INSTANCE = new AppConfig();
+    private final Properties properties = new Properties();
 
-    static {
+    private AppConfig() {
         try (InputStream input = AppConfig.class.getClassLoader()
                 .getResourceAsStream("application.properties")) {
-            if (input == null) {
-                throw new RuntimeException("application.properties not found");
+            if (input != null) {
+                properties.load(input);
+            } else {
+                System.err.println("application.properties not found in classpath");
             }
-            PROPERTIES.load(input);
-
-            String logPath = PROPERTIES.getProperty("log.file-path", "./logs/app.log");
-            System.setProperty("dynamic.log.path", logPath);
-
-            initLogback();
-
-            initCryptoService();
-
         } catch (IOException e) {
-            throw new RuntimeException("Error loading configuration", e);
+            throw new RuntimeException("error loading application.properties", e);
         }
     }
 
-    private static void initLogback() {
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-
-        String logbackConfigPath = System.getProperty("project.logger",
-                PROPERTIES.getProperty("logback.config.path"));
-
-        if (logbackConfigPath != null && !logbackConfigPath.isBlank()) {
-            Path path = Paths.get(logbackConfigPath);
-            if (Files.exists(path)) {
-                try (InputStream fileConfigLogger = Files.newInputStream(path)) {
-                    loggerContext.reset();
-                    JoranConfigurator configurator = new JoranConfigurator();
-                    configurator.setContext(loggerContext);
-                    configurator.doConfigure(fileConfigLogger);
-                    return;
-                } catch (Exception e) {
-                    System.err.println("Failed to load external logback config, falling back to default: " + e.getMessage());
-                }
-            }
-        }
-        try (InputStream resourceConfigLogger = AppConfig.class.getResourceAsStream("/logback-default.xml")) {
-            if (resourceConfigLogger != null) {
-                loggerContext.reset();
-                JoranConfigurator configurator = new JoranConfigurator();
-                configurator.setContext(loggerContext);
-                configurator.doConfigure(resourceConfigLogger);
-            }
-        } catch (Exception ex) {
-            System.err.println("Critical: Error during Logback initialization from resources: " + ex.getMessage());
-        }
+    public static AppConfig getInstance() {
+        return INSTANCE;
     }
 
-    private static void initCryptoService() {
-        String keyInput = System.getProperty("crypto.key",
-                PROPERTIES.getProperty("crypto.key.path"));
-        cryptoService = new AESCryptoService(keyInput);
+    public String getProperty(String key) {
+        return properties.getProperty(key);
     }
 
-    public static AESCryptoService getCryptoService() {
-        return cryptoService;
+    public String getProperty(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
     }
 
-    public static int getServerPort() {
-        return Integer.parseInt(PROPERTIES.getProperty("server.port", "8080"));
+
+    public int getServerPort() {
+        return Integer.parseInt(getProperty("server.port", "8080"));
     }
 
-    public static String getServerEndpointPost() {
-        return PROPERTIES.getProperty("server.endpoint.post", "/api/parametres");
+    public String getServerEndpointPost() {
+        return getProperty("server.endpoint.post", "/api/parametres");
     }
 
-    public static Path getFileOut() {
-        return Path.of(PROPERTIES.getProperty("file.out", "./generated"));
+    public Path getFileOut() {
+        return Path.of(getProperty("file.out", "./generated"));
     }
 
-    public static Charset getFileCharset() {
-        return Charset.forName(PROPERTIES.getProperty("file.charset", "UTF-8"));
+    public Charset getFileCharset() {
+        return Charset.forName(getProperty("file.charset", "UTF-8"));
     }
 
-    public static String getFakerLocale() {
-        return PROPERTIES.getProperty("faker.locale", "ru");
+    public String getFakerLocale() {
+        return getProperty("faker.locale", "ru");
+    }
+
+    public String getCryptoKeyPath() {
+        return System.getProperty("crypto.key", getProperty("crypto.key.path", ""));
+    }
+
+    public String getLogbackConfigPath() {
+        return System.getProperty("project.logger", getProperty("logback.config.path", ""));
     }
 }

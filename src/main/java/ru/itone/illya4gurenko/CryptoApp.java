@@ -1,13 +1,16 @@
-package ru.itone.illya4gurenko.security;
+package ru.itone.illya4gurenko;
+
+import ru.itone.illya4gurenko.config.Base;
+import ru.itone.illya4gurenko.security.AESCryptoService;
 
 import java.util.Scanner;
 
-public class CryptoApp {
+public class CryptoApp extends Base {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         String key = args[0];
-        AESCryptoService crypto = new AESCryptoService(key);
+        AESCryptoService crypto = getCryptoService();
 
         while (true) {
             System.out.println("1 - encode, 2 - decode, 0 - break: ");

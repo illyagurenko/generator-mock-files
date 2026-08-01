@@ -7,7 +7,7 @@ logs
 !**/src/main/**/build/
 !**/src/test/**/build/
 .kotlin
-
+*.hprof
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml

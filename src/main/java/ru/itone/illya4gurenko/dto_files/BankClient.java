@@ -1,4 +1,4 @@
-package ru.itone.illya4gurenko.model;
+package ru.itone.illya4gurenko.dto_files;
 
 public record BankClient(
         String fullName,

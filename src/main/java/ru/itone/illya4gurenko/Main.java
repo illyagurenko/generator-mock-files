@@ -2,59 +2,30 @@ package ru.itone.illya4gurenko;
 
 
 import com.sun.net.httpserver.HttpServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import ru.itone.illya4gurenko.config.AppConfig;
-import ru.itone.illya4gurenko.security.AuthService;
-import ru.itone.illya4gurenko.service.DataFakerGeneratorService;
-import ru.itone.illya4gurenko.service.DataGenerator;
-import ru.itone.illya4gurenko.service.FileGenerator;
-import ru.itone.illya4gurenko.service.SimpleFileGeneratorService;
+import ru.itone.illya4gurenko.config.Base;
 import ru.itone.illya4gurenko.handler.ParametersHandler;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class Main {
-    private static Logger log;
+public class Main extends Base {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        new Main().startServer();
+    }
+
+    public void startServer() {
         try {
-            int port = AppConfig.getServerPort();
-            String endpoint = AppConfig.getServerEndpointPost();
+            int port = config.getServerPort();
+            String endpoint = config.getServerEndpointPost();
 
-            log = LoggerFactory.getLogger(Main.class);
-            log.info("configure app");
-
-            DataGenerator dataGenerator = new DataFakerGeneratorService(AppConfig.getFakerLocale());
-            FileGenerator fileGenerator = new SimpleFileGeneratorService(dataGenerator, AppConfig.getFileOut(), AppConfig.getFileCharset());
-
-            AuthService authService = new AuthService(AppConfig.getCryptoService());
-            ParametersHandler parametersHandler = new ParametersHandler(fileGenerator, authService);
-
-            log.info("init httpserver on port {}", port);
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-
-            server.createContext(endpoint, parametersHandler);
+            server.createContext(endpoint, new ParametersHandler());
             server.setExecutor(null);
-
             server.start();
 
-            log.info("httpserver running and listening endpoint: http://localhost:{}{}", port, endpoint);
-
-        } catch (IOException e) {
-            if (log != null) {
-                log.error("io error on startup", e);
-            } else {
-                e.printStackTrace();
-            }
-            System.exit(1);
+            info("server started on port {} with endpoint: {}", port, endpoint);
         } catch (Exception e) {
-            if (log != null) {
-                log.error("error during app startup", e);
-            } else {
-                e.printStackTrace();
-            }
+            error("failed to start application", e);
             System.exit(1);
         }
     }
