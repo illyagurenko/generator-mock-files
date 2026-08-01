@@ -1,4 +1,4 @@
-package ru.itone.illya4gurenko.dto_files;
+package ru.itone.illya4gurenko.struct_file;
 
 import java.time.LocalDate;
 import java.time.LocalTime;

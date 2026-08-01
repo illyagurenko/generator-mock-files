@@ -1,9 +1,9 @@
 package ru.itone.illya4gurenko.service;
 
 import ru.itone.illya4gurenko.config.Base;
-import ru.itone.illya4gurenko.dto_files.Footer;
-import ru.itone.illya4gurenko.dto_files.Header;
-import ru.itone.illya4gurenko.dto_files.TitleFile;
+import ru.itone.illya4gurenko.struct_file.Footer;
+import ru.itone.illya4gurenko.struct_file.Header;
+import ru.itone.illya4gurenko.struct_file.TitleFile;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

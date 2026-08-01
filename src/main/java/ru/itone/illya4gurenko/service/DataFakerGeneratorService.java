@@ -2,8 +2,8 @@ package ru.itone.illya4gurenko.service;
 
 import net.datafaker.Faker;
 import ru.itone.illya4gurenko.config.Base;
-import ru.itone.illya4gurenko.dto_files.BankClient;
-import ru.itone.illya4gurenko.dto_files.Type;
+import ru.itone.illya4gurenko.struct_file.BankClient;
+import ru.itone.illya4gurenko.struct_file.Type;
 
 import java.util.Locale;
 
@@ -25,11 +25,18 @@ public class DataFakerGeneratorService extends Base implements DataGenerator {
     @Override
     public String generateData() {
         debug("generate new mock data client");
-        BankClient bankClient = new BankClient(faker.name().fullName(),
-                faker.finance().creditCard().replace("-", ""),
-                faker.options().option(Type.class),
-                faker.number().numberBetween(1, 1000001) + "");
-        debug("generate client: {}", bankClient.toString());
-        return bankClient.toString();
+        try {
+            BankClient bankClient = new BankClient(
+                    faker.name().fullName(),
+                    faker.finance().creditCard().replace("-", ""),
+                    faker.options().option(Type.class),
+                    String.valueOf(faker.number().numberBetween(1, 1000001))
+            );
+            debug("client data generated successfully: {}", bankClient);
+            return bankClient.toString();
+        } catch (Exception e) {
+            error("error generate mock data row", e);
+            throw new RuntimeException("data generation error", e);
+        }
     }
 }

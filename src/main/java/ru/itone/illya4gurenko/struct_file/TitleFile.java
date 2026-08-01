@@ -1,6 +1,7 @@
-package ru.itone.illya4gurenko.dto_files;
+package ru.itone.illya4gurenko.struct_file;
 
 import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TitleFile {
     private static final char FIRST_CHAR = 'Z';
@@ -13,7 +14,8 @@ public class TitleFile {
     private final String nameAES;
     private final int julianDate;
 
-    private static int number;
+    private final int number;
+    AtomicInteger NUMBER_COUNTER = new AtomicInteger(0);
 
     public TitleFile(int codeBank, int codeFilial, String nameAES) {
         LocalDate date = LocalDate.now();
@@ -21,12 +23,12 @@ public class TitleFile {
         this.codeBank = codeBank;
         this.codeFilial = codeFilial;
         this.nameAES = nameAES;
-        number++;
+        this.number = NUMBER_COUNTER.incrementAndGet();
     }
 
     @Override
     public String toString() {
-        return String.format("%1s%3d%3d%1s" + nameAES + "%1s%6s" + number + "%1s%3d",
-                FIRST_CHAR, codeBank, codeFilial, POINT, LINE, ENROLL, POINT, julianDate);
+        return String.format("%1s%03d%03d%1s%s%1s%s%d%1s%03d",
+                FIRST_CHAR, codeBank, codeFilial, POINT, nameAES, LINE, ENROLL, number, POINT, julianDate);
     }
 }

@@ -19,19 +19,24 @@ public class AuthService extends Base {
     }
 
     public boolean authorize(String username, String encryptedPassword) {
+        debug("authenticating user: {}", username);
         if (username == null || encryptedPassword == null) {
+            warn("authentication failed, missing username or password header");
             return false;
         }
 
         String trueUser = USER_WHITELIST.get(username);
         if (trueUser == null) {
+            warn("authentication failed: user '{}' not found in whitelist", username);
             return false;
         }
 
         try {
             String decryptedPassword = getCryptoService().decrypt(encryptedPassword);
+            debug("user '{}' authenticated successfully", username);
             return trueUser.equals(decryptedPassword);
         } catch (Exception e) {
+            error("authentication error during decryption for user: {}", username, e);
             return false;
         }
     }
