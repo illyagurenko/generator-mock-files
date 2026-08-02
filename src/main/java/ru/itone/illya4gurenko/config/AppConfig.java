@@ -63,4 +63,13 @@ public class AppConfig {
     public String getLogbackConfigPath() {
         return System.getProperty("project.logger", getProperty("logback.config.path", ""));
     }
+
+    public int getPercentageInvalid() {
+        try {
+            int prob = Integer.parseInt(getProperty("generator.file.percentage.invalid", "0"));
+            return Math.max(0, Math.min(100, prob));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
 }
