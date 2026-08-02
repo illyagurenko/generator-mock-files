@@ -18,6 +18,8 @@ public class AppConfig {
             } else {
                 System.err.println("application.properties not found in classpath");
             }
+            String logPath = getProperty("log.file-path", "./logs/app.log");
+            System.setProperty("dynamic.log.path", logPath);
         } catch (IOException e) {
             throw new RuntimeException("error loading application.properties", e);
         }
@@ -34,7 +36,6 @@ public class AppConfig {
     public String getProperty(String key, String defaultValue) {
         return properties.getProperty(key, defaultValue);
     }
-
 
     public int getServerPort() {
         return Integer.parseInt(getProperty("server.port", "8080"));

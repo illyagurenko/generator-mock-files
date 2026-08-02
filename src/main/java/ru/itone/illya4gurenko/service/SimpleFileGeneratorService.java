@@ -53,31 +53,40 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         for (int i = 0; i < countFiles; i++) {
             TitleFile titleFile = new TitleFile(codeBank, codeFilial, nameAES);
             Path path = outputDir.resolve(titleFile.toString());
-            debug("writing file [{}/{}] -> {}", (i + 1), countFiles, path.getFileName());
-
-            try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
-                Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());
-                writer.write(header.toString());
-                writer.newLine();
-
-                for (int j = 0; j < countRecords; j++) {
-                    writer.write(generator.generateData());
-                    writer.newLine();
-                }
-
-                Footer footer = new Footer(countRecords);
-                writer.write(footer.toString());
-                debug("file successfully created: {}", path.getFileName());
-            } catch (IOException e) {
-                error("error writing file {}", path, e);
-                throw new IOException("уrror generating file", e);
+            boolean isInvalid = ThreadLocalRandom.current().nextInt(100) < percentageInvalid;
+            if (isInvalid) {
+                generateInvalidFile(path, inTime, countRecords);
+            } else {
+                generateValidFile(path, inTime, countRecords);
             }
         }
         info("file generation completed");
     }
 
+    public void generateValidFile(Path path, LocalDateTime inTime, int countRecords) throws IOException {
+        debug("writing valid file -> {}", path.getFileName());
+
+        try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
+            Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());
+            writer.write(header.toString());
+            writer.newLine();
+
+            for (int j = 0; j < countRecords; j++) {
+                writer.write(generator.generateData());
+                writer.newLine();
+            }
+
+            Footer footer = new Footer(countRecords);
+            writer.write(footer.toString());
+            debug("file successfully created: {}", path.getFileName());
+        } catch (IOException e) {
+            error("error writing file {}", path, e);
+            throw new IOException("error generating file", e);
+        }
+    }
+
     private void generateInvalidFile(Path filePath, LocalDateTime inTime, int countRecords) throws IOException {
-        int corruptionType = ThreadLocalRandom.current().nextInt(4); // 4 разных вида ошибок
+        int corruptionType = ThreadLocalRandom.current().nextInt(4);
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, charset)) {
             Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());

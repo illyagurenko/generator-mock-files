@@ -15,7 +15,7 @@ public class TitleFile {
     private final int julianDate;
 
     private final int number;
-    AtomicInteger NUMBER_COUNTER = new AtomicInteger(0);
+    private static final AtomicInteger NUMBER_COUNTER = new AtomicInteger(0);
 
     public TitleFile(int codeBank, int codeFilial, String nameAES) {
         LocalDate date = LocalDate.now();
