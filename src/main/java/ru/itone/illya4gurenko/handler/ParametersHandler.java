@@ -21,6 +21,7 @@ public class ParametersHandler extends Base implements HttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+
         String remoteAddress = exchange.getRemoteAddress().toString();
         String method = exchange.getRequestMethod();
 
@@ -65,7 +66,6 @@ public class ParametersHandler extends Base implements HttpHandler {
             info("successfully authenticated and parsed json from {}, bank: {}, files: {}, records: {}",
                     remoteAddress, request.codeBank(), request.countFiles(), request.countRecords());
 
-            LocalDateTime inTime = request.inTime() != null ? request.inTime() : LocalDateTime.now();
 
             new Thread(() -> {
                 try {
@@ -76,7 +76,7 @@ public class ParametersHandler extends Base implements HttpHandler {
                             request.nameAES(),
                             request.countRecords(),
                             request.countFiles(),
-                            inTime
+                            request.inTime()
                     );
                     info("background file generation finished successfully for client {}", remoteAddress);
                 } catch (Exception e) {
@@ -87,7 +87,7 @@ public class ParametersHandler extends Base implements HttpHandler {
             sendResponse(exchange, 200, "request accepted, file generation started.");
             info("request from {} processed successfully, http 200 sent", remoteAddress);
 
-        } catch (Exception e) {
+        } catch (Error e) {
             error("unexpected internal error processing request from client {}", remoteAddress, e);
             sendResponse(exchange, 500, "internal server error");
         }

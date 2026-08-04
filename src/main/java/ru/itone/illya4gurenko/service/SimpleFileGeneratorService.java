@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SimpleFileGeneratorService extends Base implements FileGenerator {
@@ -42,7 +43,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
 
     @Override
     public void generateFile(int codeBank, int codeFilial, String nameAES, int countRecords, int countFiles) throws IOException {
-        generateFile(codeBank, codeFilial, nameAES, countRecords, countFiles, LocalDateTime.now());
+        generateFile(codeBank, codeFilial, nameAES, countRecords, countFiles, null);
     }
 
     @Override
@@ -67,7 +68,8 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         debug("writing valid file -> {}", path.getFileName());
 
         try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
-            Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());
+            Header header = (inTime != null) ? new Header(inTime.toLocalDate(), inTime.toLocalTime()) : new Header();
+
             writer.write(header.toString());
             writer.newLine();
 
@@ -87,13 +89,18 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
 
     private void generateInvalidFile(Path filePath, LocalDateTime inTime, int countRecords) throws IOException {
         int corruptionType = ThreadLocalRandom.current().nextInt(4);
+        final int noValidHeader = 0;
+        final int noValidCountRecords = 1;
+        final int noValidFooter = 2;
+        final int noValidClientRecord = 3;
+
 
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, charset)) {
-            Header header = new Header(inTime.toLocalDate(), inTime.toLocalTime());
+            Header header = (inTime != null) ? new Header(inTime.toLocalDate(), inTime.toLocalTime()) : new Header();
             Footer footer = new Footer(countRecords);
 
             switch (corruptionType) {
-                case 0:
+                case noValidHeader:
                     warn("bad header in {}", filePath.getFileName());
                     writer.write("header invalid");
                     writer.newLine();
@@ -104,7 +111,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     writer.write(footer.toString());
                     break;
 
-                case 1:
+                case noValidCountRecords:
                     warn("invalid count records in {}", filePath.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
@@ -116,7 +123,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     writer.write(footer.toString());
                     break;
 
-                case 2:
+                case noValidFooter:
                     warn("bad footer in {}", filePath.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
@@ -127,7 +134,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     writer.write("footer invalid");
                     break;
 
-                case 3:
+                case noValidClientRecord:
                     warn("bad records in {}", filePath.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
@@ -143,6 +150,8 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     }
                     writer.write(footer.toString());
                     break;
+                default:
+                    throw new NumberFormatException("Error ThreadLocalRandom");
             }
 
             debug("invalid file successfully written: {}", filePath.getFileName());

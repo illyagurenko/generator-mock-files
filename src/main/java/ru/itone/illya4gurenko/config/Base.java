@@ -3,6 +3,7 @@ package ru.itone.illya4gurenko.config;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itone.illya4gurenko.security.AESCryptoService;
@@ -20,7 +21,8 @@ import java.nio.file.Paths;
 public abstract class Base {
 
     protected static final AppConfig config = AppConfig.getInstance();
-    protected static final ObjectMapper objectMapper = new ObjectMapper();
+    protected static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());
     private static final Logger logger = initLogger();
 
     private static Logger initLogger() {

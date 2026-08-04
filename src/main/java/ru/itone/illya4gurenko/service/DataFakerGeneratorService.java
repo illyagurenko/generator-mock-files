@@ -24,7 +24,7 @@ public class DataFakerGeneratorService extends Base implements DataGenerator {
 
     @Override
     public String generateData() {
-        debug("generate new mock data client");
+        //debug("generate new mock data client");
         try {
             BankClient bankClient = new BankClient(
                     faker.name().fullName(),
@@ -32,7 +32,7 @@ public class DataFakerGeneratorService extends Base implements DataGenerator {
                     faker.options().option(Type.class),
                     String.valueOf(faker.number().numberBetween(1, 1000001))
             );
-            debug("client data generated successfully: {}", bankClient);
+            //debug("client data generated successfully: {}", bankClient);
             return bankClient.toString();
         } catch (Exception e) {
             error("error generate mock data row", e);

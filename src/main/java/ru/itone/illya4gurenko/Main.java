@@ -24,7 +24,7 @@ public class Main extends Base {
             server.start();
 
             info("server started on port {} with endpoint: {}", port, endpoint);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             error("failed to start application", e);
             System.exit(1);
         }
