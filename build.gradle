@@ -1,7 +1,9 @@
 plugins {
     id 'java'
+    id 'idea'
+    id 'maven-publish'
+    id 'jacoco'
 }
-
 group = 'ru.itone.illya4gurenko'
 version = '1.0-SNAPSHOT'
 
@@ -23,4 +25,30 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+sourceSets {
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+    }
+    integrationTest {
+        java {
+            srcDir 'src/integrationTest/java'
+            compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+            runtimeClasspath += output + compileClasspath
+        }
+
+        resources {
+            srcDir 'src/integrationTest/resources'
+        }
+    }
+}
+
+tasks.processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
