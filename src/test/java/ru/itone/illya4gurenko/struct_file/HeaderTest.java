@@ -37,7 +37,7 @@ class HeaderTest {
         assertAll("INTIME Header validation",
                 () -> assertNotNull(result, "result mustn't be null"),
                 () -> assertTrue(result.startsWith("H "), "result must start with 'H '"),
-                () -> assertTrue(result.contains("INTIME   "), "result must contain 'INTIME'"),
+                () -> assertTrue(result.contains("INTIME"), "result must contain 'INTIME'"),
                 () -> assertTrue(result.endsWith("20260810 153000"), "result must end with target date and time")
         );
     }

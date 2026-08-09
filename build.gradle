@@ -16,6 +16,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+
     implementation("net.datafaker:datafaker:2.7.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
