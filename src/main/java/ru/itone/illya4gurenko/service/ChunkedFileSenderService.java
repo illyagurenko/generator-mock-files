@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
-public class ChunkedFileSenderService extends Base {
+public class ChunkedFileSenderService extends Base implements FileSender{
 
     private static final ChunkedFileSenderService INSTANCE = new ChunkedFileSenderService();
 
@@ -28,7 +28,8 @@ public class ChunkedFileSenderService extends Base {
         return INSTANCE;
     }
 
-    public void sendFileChunked(Path filePath, String targetUrl) throws IOException {
+    @Override
+    public void sendFile(Path filePath, String targetUrl) throws IOException {
         info("starting chunked file transfer for: {} to URL: {}", filePath.getFileName(), targetUrl);
 
         if (!Files.exists(filePath)) {

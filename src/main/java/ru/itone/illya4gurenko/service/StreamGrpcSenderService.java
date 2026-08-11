@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class StreamGrpcSenderService extends Base {
+public class StreamGrpcSenderService extends Base implements FileSender{
 
     private static final StreamGrpcSenderService INSTANCE = new StreamGrpcSenderService();
     private static final int CHUNK_SIZE = 64 * 1024; // 64 KB
@@ -27,7 +27,8 @@ public class StreamGrpcSenderService extends Base {
     }
 
     // Принимаем единую строку targetUrl (например: "localhost:9090" или "grpc://localhost:9090")
-    public void sendFileStream(Path filePath, String targetUrl) {
+    @Override
+    public void sendFile(Path filePath, String targetUrl) {
         String fileName = filePath.getFileName().toString();
 
         // Очищаем адрес от схемы (grpc://, http://, https://), если она случайно передана

@@ -167,13 +167,13 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
     private void sendFileIfEnabled(Path path) throws IOException {
         if (config.isSendGrpcEnabled()) {
             info("Sending file via gRPC stream...");
-            getGrpcSenderService().sendFileStream(path, config.getGrpcReceiverUrl());
+            getGrpcSenderService().sendFile(path, config.getGrpcReceiverUrl());
         } else if (config.isSendMultipartEnabled()) {
             info("Sending file via HTTP Multipart...");
-            getMultipartSenderService().sendFileMultipart(path, config.getReceiverUrl());
+            getMultipartSenderService().sendFile(path, config.getReceiverUrl());
         } else if (config.isSendChunkedEnabled()) {
             info("Sending file via HTTP Chunked...");
-            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrl());
+            getChunkedFileSenderService().sendFile(path, config.getReceiverUrl());
         }
     }
 }

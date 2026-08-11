@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ApacheMultipartSenderService extends Base {
+public class ApacheMultipartSenderService extends Base implements FileSender {
 
     private static final ApacheMultipartSenderService INSTANCE = new ApacheMultipartSenderService();
 
@@ -29,7 +29,8 @@ public class ApacheMultipartSenderService extends Base {
         return INSTANCE;
     }
 
-    public void sendFileMultipart(Path filePath, String targetUrl) throws IOException {
+    @Override
+    public void sendFile(Path filePath, String targetUrl) throws IOException {
         String fileName = filePath.getFileName().toString();
         File file = filePath.toFile();
 
