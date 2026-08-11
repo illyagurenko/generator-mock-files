@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.itone.illya4gurenko.security.AESCryptoService;
 import ru.itone.illya4gurenko.security.AuthService;
-import ru.itone.illya4gurenko.service.DataFakerGeneratorService;
-import ru.itone.illya4gurenko.service.DataGenerator;
-import ru.itone.illya4gurenko.service.FileGenerator;
-import ru.itone.illya4gurenko.service.SimpleFileGeneratorService;
+import ru.itone.illya4gurenko.service.*;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -79,6 +76,10 @@ public abstract class Base {
 
     public static FileGenerator getFileGenerator() {
         return SimpleFileGeneratorService.getInstance();
+    }
+
+    public static ChunkedFileSenderService getChunkedFileSenderService() {
+        return ChunkedFileSenderService.getInstance();
     }
 
     public void info(String message, Object... obj) { logger.info(message, obj); }

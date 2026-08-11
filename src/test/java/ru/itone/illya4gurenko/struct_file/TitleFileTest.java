@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TitleFileTest {
 
     @DisplayName("Test generating title file")
+
     @Test
     void testGenerateTitle(){
         TitleFile file = new TitleFile(5, 12, "AES");

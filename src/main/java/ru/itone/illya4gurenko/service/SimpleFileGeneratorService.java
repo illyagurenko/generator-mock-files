@@ -81,13 +81,17 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
             Footer footer = new Footer(countRecords);
             writer.write(footer.toString());
             debug("file successfully created: {}", path.getFileName());
+
         } catch (IOException e) {
             error("error writing file {}", path, e);
             throw new IOException("error generating file", e);
         }
+        if (config.isSendChunkedEnabled()) {
+            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrlChunked());
+        }
     }
 
-    private void generateInvalidFile(Path filePath, LocalDateTime inTime, int countRecords) throws IOException {
+    private void generateInvalidFile(Path path, LocalDateTime inTime, int countRecords) throws IOException {
         int corruptionType = ThreadLocalRandom.current().nextInt(4);
         final int noValidHeader = 0;
         final int noValidCountRecords = 1;
@@ -95,13 +99,13 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         final int noValidClientRecord = 3;
 
 
-        try (BufferedWriter writer = Files.newBufferedWriter(filePath, charset)) {
+        try (BufferedWriter writer = Files.newBufferedWriter(path, charset)) {
             Header header = (inTime != null) ? new Header(inTime.toLocalDate(), inTime.toLocalTime()) : new Header();
             Footer footer = new Footer(countRecords);
 
             switch (corruptionType) {
                 case noValidHeader:
-                    warn("bad header in {}", filePath.getFileName());
+                    warn("bad header in {}", path.getFileName());
                     writer.write("header invalid");
                     writer.newLine();
                     for (int j = 0; j < countRecords; j++) {
@@ -112,7 +116,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     break;
 
                 case noValidCountRecords:
-                    warn("invalid count records in {}", filePath.getFileName());
+                    warn("invalid count records in {}", path.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
                     int actualRecords = Math.max(0, countRecords - 3);
@@ -124,7 +128,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     break;
 
                 case noValidFooter:
-                    warn("bad footer in {}", filePath.getFileName());
+                    warn("bad footer in {}", path.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
                     for (int j = 0; j < countRecords; j++) {
@@ -135,7 +139,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     break;
 
                 case noValidClientRecord:
-                    warn("bad records in {}", filePath.getFileName());
+                    warn("bad records in {}", path.getFileName());
                     writer.write(header.toString());
                     writer.newLine();
                     for (int j = 0; j < countRecords/2; j++) {
@@ -154,10 +158,14 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
                     throw new NumberFormatException("Error ThreadLocalRandom");
             }
 
-            debug("invalid file successfully written: {}", filePath.getFileName());
+            debug("invalid file successfully written: {}", path.getFileName());
+
         } catch (IOException e) {
-            error("failed to write invalid file: {}", filePath, e);
+            error("failed to write invalid file: {}", path, e);
             throw new IOException("failed to write invalid file", e);
+        }
+        if (config.isSendChunkedEnabled()) {
+            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrlChunked());
         }
     }
 }

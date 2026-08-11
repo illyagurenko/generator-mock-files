@@ -46,7 +46,8 @@ public class AppConfig {
     }
 
     public Path getFileOut() {
-        return Path.of(getProperty("file.out", "./generated"));
+        String outPath = System.getProperty("file.out", getProperty("file.out", "./generated"));
+        return Path.of(outPath);
     }
 
     public Charset getFileCharset() {
@@ -72,5 +73,13 @@ public class AppConfig {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    public boolean isSendChunkedEnabled() {
+        return Boolean.parseBoolean(getProperty("file.send.chunked.enabled", "false"));
+    }
+
+    public String getReceiverUrlChunked() {
+        return getProperty("receiver.url.chunked", "http://localhost:8082/api/upload/chunked");
     }
 }
