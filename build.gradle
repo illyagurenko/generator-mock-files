@@ -3,7 +3,9 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'jacoco'
+    id 'com.google.protobuf' version '0.9.4'
 }
+
 group = 'ru.itone.illya4gurenko'
 version = '1.0-SNAPSHOT'
 
@@ -11,20 +13,33 @@ repositories {
     mavenCentral()
 }
 
+def grpcVersion = '1.62.2'
+def protobufVersion = '3.25.3'
+
 dependencies {
+    // gRPC и Protobuf
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+
+    // Тестирование
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
 
-    testImplementation("org.mockito:mockito-junit-jupiter:5.23.0")
+    // Генерация данных и утилиты
+    implementation 'net.datafaker:datafaker:2.1.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+    implementation 'ch.qos.logback:logback-classic:1.5.3'
 
-    implementation("net.datafaker:datafaker:2.7.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
-    implementation 'org.slf4j:slf4j-api:2.0.18'
-    implementation 'ch.qos.logback:logback-classic:1.6.0'
-
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'}
+    // Apache HTTP Client 5
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+}
 
 test {
     useJUnitPlatform()
@@ -45,7 +60,6 @@ sourceSets {
             compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
             runtimeClasspath += output + compileClasspath
         }
-
         resources {
             srcDir 'src/integrationTest/resources'
         }
@@ -54,4 +68,23 @@ sourceSets {
 
 tasks.processTestResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+// Настройка генерации gRPC из .proto файлов
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                grpc {}
+            }
+        }
+    }
 }

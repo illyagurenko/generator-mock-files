@@ -86,6 +86,10 @@ public abstract class Base {
         return ApacheMultipartSenderService.getInstance();
     }
 
+    public static StreamGrpcSenderService getGrpcSenderService() {
+        return StreamGrpcSenderService.getInstance();
+    }
+
     public void info(String message, Object... obj) { logger.info(message, obj); }
     public void info(String message) { logger.info(message); }
     public void debug(String message, Object... obj) { logger.debug(message, obj); }

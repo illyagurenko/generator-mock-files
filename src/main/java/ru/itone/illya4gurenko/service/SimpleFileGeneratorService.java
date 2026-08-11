@@ -86,11 +86,7 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
             error("error writing file {}", path, e);
             throw new IOException("error generating file", e);
         }
-        if (config.isSendMultipartEnabled()) {
-            getMultipartSenderService().sendFileMultipart(path, config.getReceiverUrl());
-        } else if (config.isSendChunkedEnabled()) {
-            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrl());
-        }
+        sendFileIfEnabled(path);
     }
 
     private void generateInvalidFile(Path path, LocalDateTime inTime, int countRecords) throws IOException {
@@ -166,9 +162,17 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
             error("failed to write invalid file: {}", path, e);
             throw new IOException("failed to write invalid file", e);
         }
-        if (config.isSendMultipartEnabled()) {
+        sendFileIfEnabled(path);
+    }
+    private void sendFileIfEnabled(Path path) throws IOException {
+        if (config.isSendGrpcEnabled()) {
+            info("Sending file via gRPC stream...");
+            getGrpcSenderService().sendFileStream(path, config.getGrpcReceiverUrl());
+        } else if (config.isSendMultipartEnabled()) {
+            info("Sending file via HTTP Multipart...");
             getMultipartSenderService().sendFileMultipart(path, config.getReceiverUrl());
         } else if (config.isSendChunkedEnabled()) {
+            info("Sending file via HTTP Chunked...");
             getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrl());
         }
     }

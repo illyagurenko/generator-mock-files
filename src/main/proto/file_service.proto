@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package ru.itone.illya4gurenko.grpc;
+
+// ОБЯЗАТЕЛЬНО! Без этих двух строчек Идея не увидит классы:
+option java_multiple_files = true;
+option java_package = "ru.itone.illya4gurenko.grpc";
+
+service FileUploadService {
+  rpc uploadFile (stream FileChunk) returns (UploadStatus);
+}
+
+message FileChunk {
+  string file_name = 1;
+  bytes content = 2;
+}
+
+message UploadStatus {
+  bool is_success = 1;      // В Java сгенерируется метод getIsSuccess()
+  string message = 2;         // В Java сгенерируется метод getMessage()
+  int64 bytes_received = 3;   // В Java сгенерируется метод getBytesReceived()
+}

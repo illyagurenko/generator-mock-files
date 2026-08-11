@@ -83,6 +83,14 @@ public class AppConfig {
         return Boolean.parseBoolean(getProperty("file.send.multipart.enabled", "false"));
     }
 
+    public boolean isSendGrpcEnabled() {
+        return Boolean.parseBoolean(getProperty("file.send.grpc.enabled", "false"));
+    }
+
+    public String getGrpcReceiverUrl() {
+        return getProperty("grpc.receiver.url", "localhost:9090");
+    }
+
     public String getReceiverUrl() {
         return getProperty("receiver.url", "http://localhost:8082/api/upload/chunked");
     }
