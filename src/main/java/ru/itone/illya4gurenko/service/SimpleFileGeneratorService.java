@@ -86,8 +86,10 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
             error("error writing file {}", path, e);
             throw new IOException("error generating file", e);
         }
-        if (config.isSendChunkedEnabled()) {
-            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrlChunked());
+        if (config.isSendMultipartEnabled()) {
+            getMultipartSenderService().sendFileMultipart(path, config.getReceiverUrl());
+        } else if (config.isSendChunkedEnabled()) {
+            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrl());
         }
     }
 
@@ -164,8 +166,10 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
             error("failed to write invalid file: {}", path, e);
             throw new IOException("failed to write invalid file", e);
         }
-        if (config.isSendChunkedEnabled()) {
-            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrlChunked());
+        if (config.isSendMultipartEnabled()) {
+            getMultipartSenderService().sendFileMultipart(path, config.getReceiverUrl());
+        } else if (config.isSendChunkedEnabled()) {
+            getChunkedFileSenderService().sendFileChunked(path, config.getReceiverUrl());
         }
     }
 }

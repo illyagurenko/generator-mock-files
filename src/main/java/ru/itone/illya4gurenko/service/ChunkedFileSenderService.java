@@ -41,6 +41,7 @@ public class ChunkedFileSenderService extends Base {
                     .uri(URI.create(targetUrl))
                     .header("Content-Type", "text/plain; charset=" + config.getFileCharset().name())
                     .header("X-File-Name", filePath.getFileName().toString())
+                    //chunking
                     .POST(HttpRequest.BodyPublishers.ofFile(filePath))
                     .build();
 

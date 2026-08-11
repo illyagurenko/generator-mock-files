@@ -82,6 +82,10 @@ public abstract class Base {
         return ChunkedFileSenderService.getInstance();
     }
 
+    public static ApacheMultipartSenderService getMultipartSenderService() {
+        return ApacheMultipartSenderService.getInstance();
+    }
+
     public void info(String message, Object... obj) { logger.info(message, obj); }
     public void info(String message) { logger.info(message); }
     public void debug(String message, Object... obj) { logger.debug(message, obj); }

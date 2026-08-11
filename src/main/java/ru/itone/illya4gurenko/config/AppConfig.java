@@ -79,7 +79,11 @@ public class AppConfig {
         return Boolean.parseBoolean(getProperty("file.send.chunked.enabled", "false"));
     }
 
-    public String getReceiverUrlChunked() {
-        return getProperty("receiver.url.chunked", "http://localhost:8082/api/upload/chunked");
+    public boolean isSendMultipartEnabled() {
+        return Boolean.parseBoolean(getProperty("file.send.multipart.enabled", "false"));
+    }
+
+    public String getReceiverUrl() {
+        return getProperty("receiver.url", "http://localhost:8082/api/upload/chunked");
     }
 }
