@@ -7,6 +7,10 @@ import ru.itone.illya4gurenko.struct_file.Type;
 
 import java.util.Locale;
 
+/**
+ * Сервис генерации реалистичных моковых данных клиентов.
+ * Использует библиотеку {@link Faker}
+ */
 public class DataFakerGeneratorService extends Base implements DataGenerator {
     private static final DataFakerGeneratorService INSTANCE = new DataFakerGeneratorService();
 
@@ -22,6 +26,13 @@ public class DataFakerGeneratorService extends Base implements DataGenerator {
         return INSTANCE;
     }
 
+    /**
+     * Генерирует случайные данные клиента (ФИО, счет карты, тип операции и сумму)
+     * и форматирует их в строку фиксированной ширины.
+     *
+     * @return Сформированная строка с данными банковского клиента
+     * @throws RuntimeException Если при генерации данных произошел сбой библиотеки Faker
+     */
     @Override
     public String generateData() {
         //debug("generate new mock data client");

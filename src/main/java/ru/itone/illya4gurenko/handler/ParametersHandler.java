@@ -11,14 +11,33 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 
+/**
+ * Обработчик HTTP POST запросов для запуска процесса генерации файлов
+ * <p>
+ * <b>Сценарий работы:</b>
+ * <ol>
+ *   <li>Проверяет, что HTTP-метод — {@code POST} иначе возвращает HTTP 405.</li>
+ *   <li>Проверяет авторизацию через заголовки {@code X-Auth-User} и {@code X-Auth-Password} иначе HTTP 401.</li>
+ *   <li>Парсит JSON-тело запроса в {@link ParametersRequestDto} иначе HTTP 400.</li>
+ *   <li>Валидирует параметры {@code countFiles} и {@code countRecords} > 0.</li>
+ *   <li>Запускает генерацию файлов в <b>отдельном фоновом потоке</b> чтобы не блокировать ответ.</li>
+ *   <li>Сразу возвращает клиенту ответ {@code 200 OK} о том, что задача принята.</li>
+ * </ol>
+ * </p>
+ */
 public class ParametersHandler extends Base implements HttpHandler {
 
     public ParametersHandler() {
         info("ParametersHandler initialized");
     }
 
+    /**
+     * Главный метод обработки входящего HTTP-запроса от клиента.
+     *
+     * @param exchange Объект HTTP-взаимодействия содержит заголовки, тело запроса и поток ответа
+     * @throws IOException В случае ошибок ввода-вывода при работе со связью
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
 
@@ -93,6 +112,14 @@ public class ParametersHandler extends Base implements HttpHandler {
         }
     }
 
+    /**
+     * Вспомогательный метод для отправки текстового HTTP-ответа клиенту.
+     *
+     * @param exchange     Объект HTTP-взаимодействия
+     * @param statusCode   HTTP-код ответа
+     * @param responseText Текст ответа
+     * @throws IOException При ошибке записи в поток ответа
+     */
     private void sendResponse(HttpExchange exchange, int statusCode, String responseText) throws IOException {
         byte[] bytes = responseText.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=UTF-8");

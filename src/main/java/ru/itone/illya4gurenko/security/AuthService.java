@@ -4,6 +4,14 @@ import ru.itone.illya4gurenko.config.Base;
 
 import java.util.Map;
 
+/**
+ * Сервис авторизации клиентов приложения.
+ * <p>
+ * Сверяет имя пользователя со списком разрешенных учетных записей,
+ * а также дешифрует переданный зашифрованный пароль через {@link AESCryptoService}
+ * и проверяет его совпадение.
+ * </p>
+ */
 public class AuthService extends Base {
 
     private static final AuthService INSTANCE = new AuthService();
@@ -26,6 +34,13 @@ public class AuthService extends Base {
         this.cryptoService = cryptoService;
     }
 
+    /**
+     * Выполняет аутентификацию и авторизацию пользователя.
+     *
+     * @param username          Имя пользователя
+     * @param encryptedPassword Зашифрованный в Base64 пароль из HTTP-заголовка
+     * @return {@code true}, если пользователь найден в белом списке и пароль совпал; {@code false} в противном случае
+     */
     public boolean authorize(String username, String encryptedPassword) {
         debug("authenticating user: {}", username);
         if (username == null || encryptedPassword == null) {

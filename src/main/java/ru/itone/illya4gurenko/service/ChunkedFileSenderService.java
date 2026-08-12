@@ -11,6 +11,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
+/**
+ * Сервис прямой отправки сырого содержимого файла по протоколу HTTP (Raw POST / Chunked Transfer Encoding).
+ * <p>
+ * Реализован на базе стандартного нативного {@link HttpClient}.
+ * Передает файл в открытом текстовом формате {@code text/plain}.
+ * </p>
+ */
 public class ChunkedFileSenderService extends Base implements FileSender{
 
     private static final ChunkedFileSenderService INSTANCE = new ChunkedFileSenderService();
@@ -28,6 +35,13 @@ public class ChunkedFileSenderService extends Base implements FileSender{
         return INSTANCE;
     }
 
+    /**
+     * Отправляет сырое содержимое файла на HTTP-сервер.
+     *
+     * @param filePath  Путь к передаваемому файлу
+     * @param targetUrl Целевой URL веб-сервера
+     * @throws IOException При ошибках ввода-вывода или неверных HTTP-статусах ответа
+     */
     @Override
     public void sendFile(Path filePath, String targetUrl) throws IOException {
         info("starting chunked file transfer for: {} to URL: {}", filePath.getFileName(), targetUrl);

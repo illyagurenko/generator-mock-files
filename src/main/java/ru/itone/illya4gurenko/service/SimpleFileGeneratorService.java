@@ -11,9 +11,16 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Главный оркестратор генерации банковских реестров.
+ * <p>
+ * Генерирует валидные и намеренно поврежденные (invalid) файлы с заголовочной строкой
+ * </p>
+ * После завершения записи файла на диск автоматически делегирует отправку соответствующему
+ * сервису-реализации {@link FileSender} на основе настроек приложения.
+ */
 public class SimpleFileGeneratorService extends Base implements FileGenerator {
     private static final SimpleFileGeneratorService INSTANCE = new SimpleFileGeneratorService();
     private final DataGenerator generator;
@@ -64,6 +71,14 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         info("file generation completed");
     }
 
+    /**
+     * Создает корректный файл банковского реестра.
+     *
+     * @param path         Целевой путь файла
+     * @param inTime       Плановое время исполнения
+     * @param countRecords Количество строк клиентов
+     * @throws IOException При ошибке записи или сетевой передачи
+     */
     public void generateValidFile(Path path, LocalDateTime inTime, int countRecords) throws IOException {
         debug("writing valid file -> {}", path.getFileName());
 
@@ -89,6 +104,14 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         sendFileIfEnabled(path);
     }
 
+    /**
+     * Генерирует файл с внесенными повреждениями (для негативного тестирования приемников).
+     *
+     * @param path         Целевой путь файла
+     * @param inTime       Плановое время исполнения
+     * @param countRecords Количество строк клиентов
+     * @throws IOException При ошибке записи или сетевой передачи
+     */
     private void generateInvalidFile(Path path, LocalDateTime inTime, int countRecords) throws IOException {
         int corruptionType = ThreadLocalRandom.current().nextInt(4);
         final int noValidHeader = 0;
@@ -164,6 +187,14 @@ public class SimpleFileGeneratorService extends Base implements FileGenerator {
         }
         sendFileIfEnabled(path);
     }
+
+    /**
+     * Выбирает реализацию {@link FileSender} на основе флагов конфигурации
+     * и отправляет файл в соответствующий канал.
+     *
+     * @param path Путь к сформированному файлу
+     * @throws IOException При ошибках передачи
+     */
     private void sendFileIfEnabled(Path path) throws IOException {
         if (config.isSendGrpcEnabled()) {
             info("Sending file via gRPC stream...");

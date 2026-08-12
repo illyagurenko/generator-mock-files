@@ -5,6 +5,10 @@ import ru.itone.illya4gurenko.security.AESCryptoService;
 
 import java.util.Scanner;
 
+/**
+ * Вспомогательное приложение.
+ * Используется для примера работы де/шифрования паролей
+ */
 public class CryptoApp extends Base {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);

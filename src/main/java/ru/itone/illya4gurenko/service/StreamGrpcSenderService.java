@@ -9,16 +9,24 @@ import ru.itone.illya4gurenko.grpc.FileChunk;
 import ru.itone.illya4gurenko.grpc.FileUploadServiceGrpc;
 import ru.itone.illya4gurenko.grpc.UploadStatus;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Сервис высокопроизводительной потоковой отправки файлов по протоколу <b>gRPC (Client Streaming)</b>.
+ * <p>
+ * Читает файл с диска порциями по 64 Килобайта и непрерывно передает их по HTTP/2 сокету
+ * на gRPC-сервер. По завершении ожидает итоговый статус от сервера.
+ * </p>
+ */
 public class StreamGrpcSenderService extends Base implements FileSender{
 
     private static final StreamGrpcSenderService INSTANCE = new StreamGrpcSenderService();
-    private static final int CHUNK_SIZE = 64 * 1024; // 64 KB
+    private static final int CHUNK_SIZE = 64 * 1024;
 
     private StreamGrpcSenderService() {}
 
@@ -26,12 +34,18 @@ public class StreamGrpcSenderService extends Base implements FileSender{
         return INSTANCE;
     }
 
-    // Принимаем единую строку targetUrl (например: "localhost:9090" или "grpc://localhost:9090")
+    /**
+     * Отправляет файл на gRPC-сервер через клиентский стриминг чанков байт.
+     *
+     * @param filePath  Путь к передаваемому файлу
+     * @param targetUrl Адрес целевого gRPC-сервера в формате host:port
+     * @throws IOException При ошибках чтения файла или таймауте gRPC-соединения
+     */
     @Override
-    public void sendFile(Path filePath, String targetUrl) {
+    public void sendFile(Path filePath, String targetUrl) throws IOException {
         String fileName = filePath.getFileName().toString();
 
-        // Очищаем адрес от схемы (grpc://, http://, https://), если она случайно передана
+
         String cleanTarget = targetUrl
                 .replaceAll("^grpc://", "")
                 .replaceAll("^https?://", "");
@@ -43,7 +57,6 @@ public class StreamGrpcSenderService extends Base implements FileSender{
             return;
         }
 
-        // Используем forTarget() вместо forAddress(host, port)
         ManagedChannel channel = ManagedChannelBuilder.forTarget(cleanTarget)
                 .usePlaintext()
                 .build();

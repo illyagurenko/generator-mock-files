@@ -15,6 +15,14 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+/**
+ * Сервис симметричного шифрования и дешифрования данных по алгоритму <b>AES</b>.
+ * <p>
+ * Секретный ключ инициализируется из файла, путь к которому задается в свойстве {@code crypto.key.path}.
+ * Если файл с ключом не найден или не задан, шифрование переходит в безопасный выключенный режим
+ * ({@code isDisableCrypto = true}), и строки возвращаются в исходном виде.
+ * </p>
+ */
 public class AESCryptoService extends Base {
 
     private static final String ALGORITHM = "AES";
@@ -31,6 +39,11 @@ public class AESCryptoService extends Base {
         this.secretKey = initSecretKey();
     }
 
+    /**
+     * Инициализирует секретный ключ AES, считывая его из Base64-файла на диске.
+     *
+     * @return Объект {@link SecretKey} или {@code null}, если файл ключа недоступен
+     */
     private SecretKey initSecretKey() {
         try {
             String keyProperty = config.getCryptoKeyPath();
@@ -62,6 +75,13 @@ public class AESCryptoService extends Base {
         }
     }
 
+    /**
+     * Расшифровывает строку, зашифрованную по алгоритму AES и закодированную в Base64.
+     *
+     * @param encryptedText Зашифрованная строка в формате Base64
+     * @return Исходная расшифрованная строка в UTF-8
+     * @throws RuntimeException В случае ошибки криптографических операций
+     */
     public String decrypt(String encryptedText) {
         if (isDisableCrypto || secretKey == null || encryptedText == null) {
             info("Password decryption skipped (crypto disabled or empty input)");
@@ -77,6 +97,13 @@ public class AESCryptoService extends Base {
         }
     }
 
+    /**
+     * Зашифровывает исходную строку алгоритмом AES и кодирует результат в Base64.
+     *
+     * @param decryptedText Исходный текст для шифрования
+     * @return Зашифрованная строка в формате Base64
+     * @throws RuntimeException В случае ошибки криптографических операций
+     */
     public String encrypt(String decryptedText) {
         if (isDisableCrypto || secretKey == null || decryptedText == null) {
             return decryptedText;

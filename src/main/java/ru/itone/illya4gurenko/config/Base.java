@@ -15,6 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Базовый абстрактный класс приложения.
+ * Все сервисы и хэндлеры наследуются от этого класса для единообразного доступа к логгеру.
+ */
 public abstract class Base {
 
     protected static final AppConfig config = AppConfig.getInstance();
@@ -22,6 +26,11 @@ public abstract class Base {
             .registerModule(new JavaTimeModule());
     private static final Logger logger = initLogger();
 
+    /**
+     * Инициализирует логгер Logback.
+     * Сначала пытается подгрузить внешний XML-конфиг по пути из {@code logback.config.path}.
+     * В случае неудачи откатывается на внутренний {@code /logback-default.xml}.
+     */
     private static Logger initLogger() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         String logbackPath = config.getLogbackConfigPath();
@@ -57,39 +66,33 @@ public abstract class Base {
         return LoggerFactory.getLogger(Base.class);
     }
 
-
+    // геттеры сервисов
     public static AppConfig getConfig() {
         return config;
     }
-
     public static AESCryptoService getCryptoService() {
         return AESCryptoService.getInstance();
     }
-
     public static AuthService getAuthService() {
         return AuthService.getInstance();
     }
-
     public static DataGenerator getDataGenerator() {
         return DataFakerGeneratorService.getInstance();
     }
-
     public static FileGenerator getFileGenerator() {
         return SimpleFileGeneratorService.getInstance();
     }
-
     public static ChunkedFileSenderService getChunkedFileSenderService() {
         return ChunkedFileSenderService.getInstance();
     }
-
     public static ApacheMultipartSenderService getMultipartSenderService() {
         return ApacheMultipartSenderService.getInstance();
     }
-
     public static StreamGrpcSenderService getGrpcSenderService() {
         return StreamGrpcSenderService.getInstance();
     }
 
+    // обертки для логирования
     public void info(String message, Object... obj) { logger.info(message, obj); }
     public void info(String message) { logger.info(message); }
     public void debug(String message, Object... obj) { logger.debug(message, obj); }

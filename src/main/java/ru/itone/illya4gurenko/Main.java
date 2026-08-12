@@ -7,6 +7,14 @@ import ru.itone.illya4gurenko.handler.ParametersHandler;
 
 import java.net.InetSocketAddress;
 
+/**
+ * Главная точка входа в приложение.
+ * <p>
+ * Считывает конфигурацию, поднимает встроенный
+ * HTTP-сервер {@link HttpServer}, регистрирует обработчик маршрутов {@link ParametersHandler}
+ * и начинает прослушивание входящих подключений.
+ * </p>
+ */
 public class Main extends Base {
 
     public static void main(String[] args) {

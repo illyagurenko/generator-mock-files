@@ -12,9 +12,15 @@ import ru.itone.illya4gurenko.config.Base;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Сервис отправки файлов по протоколу HTTP с использованием формата {@code multipart/form-data}.
+ * <p>
+ * Реализован на базе библиотеки <b>Apache HttpClient 5</b>. Стримит данные с диска
+ * напрямую в сетевой сокет без загрузки всего файла в ОЗУ.
+ * </p>
+ */
 public class ApacheMultipartSenderService extends Base implements FileSender {
 
     private static final ApacheMultipartSenderService INSTANCE = new ApacheMultipartSenderService();
@@ -29,6 +35,13 @@ public class ApacheMultipartSenderService extends Base implements FileSender {
         return INSTANCE;
     }
 
+    /**
+     * Отправляет файл на удаленный HTTP-сервер в формате Multipart.
+     *
+     * @param filePath  Путь к передаваемому файлу на локальном диске
+     * @param targetUrl Целевой HTTP URL приемника
+     * @throws IOException В случае ошибки сети или статуса ответа отличном от 2xx
+     */
     @Override
     public void sendFile(Path filePath, String targetUrl) throws IOException {
         String fileName = filePath.getFileName().toString();
