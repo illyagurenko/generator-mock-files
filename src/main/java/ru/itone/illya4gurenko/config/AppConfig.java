@@ -6,7 +6,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Properties;
 
+/**
+ * Синглтон-класс для управления конфигурацией приложения.
+ * Загружает настройки из ресурсов {@code application.properties}.
+ */
 public class AppConfig {
+
     private static final AppConfig INSTANCE = new AppConfig();
     private final Properties properties = new Properties();
 

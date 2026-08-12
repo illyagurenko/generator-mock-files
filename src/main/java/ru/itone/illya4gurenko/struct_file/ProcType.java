@@ -1,5 +1,12 @@
 package ru.itone.illya4gurenko.struct_file;
 
+/**
+ * Перечислениетипов обработки данных
+ */
 public enum ProcType {
-    IMMEDIATE, INTIME
+    /** При поступлении */
+    IMMEDIATE,
+
+    /** К определенной дате и времени */
+    INTIME
 }
