@@ -79,9 +79,6 @@ public abstract class Base {
     public static DataGenerator getDataGenerator() {
         return DataFakerGeneratorService.getInstance();
     }
-    public static FileGenerator getFileGenerator() {
-        return SimpleFileGeneratorService.getInstance();
-    }
     public static ChunkedFileSenderService getChunkedFileSenderService() {
         return ChunkedFileSenderService.getInstance();
     }
@@ -90,6 +87,9 @@ public abstract class Base {
     }
     public static StreamGrpcSenderService getGrpcSenderService() {
         return StreamGrpcSenderService.getInstance();
+    }
+    public static Visitor getEnrollVisitor() {
+        return GenerateEnrollVisitor.getInstance();
     }
 
     // обертки для логирования

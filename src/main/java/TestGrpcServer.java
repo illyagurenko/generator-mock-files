@@ -53,12 +53,12 @@ public class TestGrpcServer {
                 public void onNext(FileChunk chunk) {
                     totalBytes += chunk.getContent().size();
                     fileName = chunk.getFileName();
-                    System.out.println("--> Получен чанк размером: " + chunk.getContent().size() + " байт");
+                    System.out.println("gt chunk: " + chunk.getContent().size() + " byte");
                 }
 
                 @Override
                 public void onError(Throwable t) {
-                    System.err.println("Ошибка на сервере: " + t.getMessage());
+                    System.err.println("error: " + t.getMessage());
                 }
 
                 @Override

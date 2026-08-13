@@ -15,10 +15,10 @@ import java.net.InetSocketAddress;
  * и начинает прослушивание входящих подключений.
  * </p>
  */
-public class Main extends Base {
+public class GenerateFilesApp extends Base {
 
     public static void main(String[] args) {
-        new Main().startServer();
+        new GenerateFilesApp().startServer();
     }
 
     public void startServer() {

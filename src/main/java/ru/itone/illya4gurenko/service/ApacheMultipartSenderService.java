@@ -65,7 +65,7 @@ public class ApacheMultipartSenderService extends Base implements FileSender {
 
         HttpEntity multipart = MultipartEntityBuilder.create()
 
-                .addTextBody("title", "Bank Client Registry", ContentType.TEXT_PLAIN)
+                .addTextBody("title", "Bank Client Registry", ContentType.MULTIPART_FORM_DATA)
                 .addBinaryBody("file", file, fileContentType, fileName)
                 .build();
 

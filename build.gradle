@@ -3,6 +3,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'jacoco'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'com.google.protobuf' version '0.9.4'
 }
 
@@ -86,5 +87,14 @@ protobuf {
                 grpc {}
             }
         }
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('generator_mock_file')   // generator
+    archiveVersion.set('1.0')           // -1.0
+    archiveClassifier.set('all')        // -all
+    manifest {
+        attributes 'Main-Class': 'ru.itone.illya4gurenko.GenerateFilesApp'
     }
 }

@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package ru.itone.illya4gurenko.grpc;
 
-// ОБЯЗАТЕЛЬНО! Без этих двух строчек Идея не увидит классы:
 option java_multiple_files = true;
 option java_package = "ru.itone.illya4gurenko.grpc";
 

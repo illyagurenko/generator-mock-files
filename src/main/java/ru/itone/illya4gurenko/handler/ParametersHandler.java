@@ -6,11 +6,17 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.itone.illya4gurenko.config.Base;
 import ru.itone.illya4gurenko.dto.ParametersRequestDto;
+import ru.itone.illya4gurenko.exception.VisitorTypeException;
+import ru.itone.illya4gurenko.service.GenerateEnrollVisitor;
+import ru.itone.illya4gurenko.service.Visitor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Обработчик HTTP POST запросов для запуска процесса генерации файлов
@@ -27,6 +33,19 @@ import java.nio.charset.StandardCharsets;
  * </p>
  */
 public class ParametersHandler extends Base implements HttpHandler {
+
+    private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
+
+    /**
+     * Пул фоновых воркеров с фиксированным размером (например, 10 параллельных задач).
+     * Создает демон-потоки с предсказуемыми именами для удобного чтения логов.
+     */
+    private static final ExecutorService fileGenExecutor = Executors.newFixedThreadPool(10, r -> {
+        Thread thread = new Thread(r);
+        thread.setName("file-gen-worker-" + THREAD_COUNTER.getAndIncrement());
+        thread.setDaemon(true); // Демон-потоки не блокируют завершение приложения
+        return thread;
+    });
 
     public ParametersHandler() {
         info("ParametersHandler initialized");
@@ -86,22 +105,19 @@ public class ParametersHandler extends Base implements HttpHandler {
                     remoteAddress, request.codeBank(), request.countFiles(), request.countRecords());
 
 
-            new Thread(() -> {
+            fileGenExecutor.submit(() -> {
                 try {
-                    debug("starting background file generation task for client {}", remoteAddress);
-                    getFileGenerator().generateFile(
-                            request.codeBank(),
-                            request.codeFilial(),
-                            request.nameAES(),
-                            request.countRecords(),
-                            request.countFiles(),
-                            request.inTime()
-                    );
+                    debug("starting background file generation task via Visitor for client {}", remoteAddress);
+
+                    getEnrollVisitor().visit(request);
+
                     info("background file generation finished successfully for client {}", remoteAddress);
+                } catch (VisitorTypeException e) {
+                    error("invalid object type passed to visitor", e);
                 } catch (Exception e) {
                     error("error during background file generation for client {}", remoteAddress, e);
                 }
-            }, "file-gen-" + System.currentTimeMillis()).start();
+            });
 
             sendResponse(exchange, 200, "request accepted, file generation started.");
             info("request from {} processed successfully, http 200 sent", remoteAddress);
