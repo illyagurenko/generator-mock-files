@@ -18,8 +18,9 @@ public class AppConfig {
     private final Properties properties = new Properties();
 
     private AppConfig() {
-        //java -Dgenerator.file.property=./config/application.properties -Dgenerator.file.logback=./config/file-logback.xml
-        //     -jar build/libs/file-generator-service-1.0.0.jar
+        //java -Dgenerator.file.property=./config/application.properties \
+        //     -Dgenerator.file.logback=./config/file-logback.xml \
+        //     -jar build/libs/generator_mock_file-1.0-all.jar
         String externalPropPath = System.getProperty("generator.file.property");
         boolean loadedExternal = false;
 
