@@ -1,6 +1,7 @@
 package ru.itone.illya4gurenko.service;
 
 import net.datafaker.Faker;
+import net.datafaker.providers.base.Finance;
 import ru.itone.illya4gurenko.config.Base;
 import ru.itone.illya4gurenko.struct_file.BankClient;
 import ru.itone.illya4gurenko.struct_file.Type;
@@ -39,7 +40,7 @@ public class DataFakerGeneratorService extends Base implements DataGenerator {
         try {
             BankClient bankClient = new BankClient(
                     faker.name().fullName(),
-                    faker.finance().creditCard().replace("-", ""),
+                    faker.finance().creditCard(Finance.CreditCardType.AMERICAN_EXPRESS).replace("-", ""),
                     faker.options().option(Type.class),
                     String.valueOf(faker.number().numberBetween(1, 1000001))
             );

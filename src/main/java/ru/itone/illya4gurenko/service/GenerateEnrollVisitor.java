@@ -71,6 +71,14 @@ public class GenerateEnrollVisitor extends Base implements Visitor {
         for (int i = 0; i < request.countFiles(); i++) {
             TitleFile titleFile = new TitleFile(request.codeBank(), request.codeFilial(), request.nameAES());
             Path path = outputDir.resolve(titleFile.toString());
+//            if(percentageInvalid == 0){
+//                try {
+//                    generateInvalidFile(path, request.inTime(), request.countRecords());
+//                    return;
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
             boolean isInvalid = ThreadLocalRandom.current().nextInt(100) < percentageInvalid;
 
             try {
