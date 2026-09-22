@@ -8,8 +8,14 @@ services:
       - "8080:8080"
     volumes:
       - ./config:/app/config
-      - ./generated:/app/generated
+      - D:/gpb_tasks/shared_exchange:/app/generated
       - ./logs:/app/logs
     environment:
       - TZ=Europe/Moscow
     restart: unless-stopped
+    networks:
+      - food_bridge
+
+networks:
+  food_bridge:
+    external: true
