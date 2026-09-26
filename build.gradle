@@ -24,7 +24,7 @@ dependencies {
     implementation "io.grpc:grpc-stub:${grpcVersion}"
 
     compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
-
+    implementation 'com.oracle.database.jdbc:ojdbc11:23.3.0.23.09'
     // Тестирование
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

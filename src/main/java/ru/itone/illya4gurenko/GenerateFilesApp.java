@@ -3,6 +3,7 @@ package ru.itone.illya4gurenko;
 
 import com.sun.net.httpserver.HttpServer;
 import ru.itone.illya4gurenko.config.Base;
+import ru.itone.illya4gurenko.handler.DbPopulateHandler;
 import ru.itone.illya4gurenko.handler.ParametersHandler;
 
 import java.net.InetSocketAddress;
@@ -25,9 +26,11 @@ public class GenerateFilesApp extends Base {
         try {
             int port = config.getServerPort();
             String endpoint = config.getServerEndpointPost();
+            String dbEndpoint = config.getDbEndpointPost();
 
             HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext(endpoint, new ParametersHandler());
+            server.createContext(dbEndpoint, new DbPopulateHandler());
             server.setExecutor(null);
             server.start();
 

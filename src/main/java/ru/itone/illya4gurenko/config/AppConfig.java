@@ -124,4 +124,20 @@ public class AppConfig {
     public String getGrpcReceiverUrl() {
         return getProperty("generator.files.grpc.receiver.url", "localhost:9090");
     }
+
+    public String getDbUrl() {
+        return getProperty("generator.db.url", "jdbc:oracle:thin:@//localhost:1521/XE");
+    }
+
+    public String getDbUser() {
+        return getProperty("generator.db.user", "GRU");
+    }
+
+    public String getDbPassword() {
+        return getProperty("generator.db.password", "secret");
+    }
+
+    public String getDbEndpointPost() {
+        return getProperty("generator.db.endpoint.post", "/api/db/populate");
+    }
 }

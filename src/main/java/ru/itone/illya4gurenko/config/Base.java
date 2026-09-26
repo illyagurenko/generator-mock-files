@@ -91,6 +91,9 @@ public abstract class Base {
     public static Visitor getEnrollVisitor() {
         return GenerateEnrollVisitor.getInstance();
     }
+    public static DatabaseService getDatabaseService() {
+        return DatabaseService.getInstance();
+    }
 
     // обертки для логирования
     public void info(String message, Object... obj) { logger.info(message, obj); }
