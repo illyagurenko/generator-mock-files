@@ -1,207 +1,385 @@
+# Generator Service
 
-# Сервис генерации и передачи файлов
+Сервис генерации тестовых банковских файлов и тестовых записей для контура GRU.
 
-Сервис на Java 21, предназначенный для автоматизированной генерации тестовых банковских данных в виде файлов с фиксированной структурой и их последующей отправки по различным сетевым протоколам (gRPC Client Streaming, HTTP Multipart, HTTP Chunked).
+## Назначение
 
-Система поддерживает внедрение управляемых дефектов в структуру файлов для проведения негативного и стресс-тестирования систем-приемников.
+`generator-service` используется в двух сценариях:
 
----
+1. Генерация банковских файлов фиксированного формата и доставка их в `food-card`.
+2. Прямая генерация тестовых записей в Oracle-таблицу `GRU.GRU_VISTA_TAB`.
 
-## Оглавление
+Основной сценарий полного E2E-теста:
 
-1. [Функциональные возможности](#функциональные-возможности)
-2. [Используемые библиотеки и технологии](#используемые-библиотеки-и-технологии)
-3. [Архитектура системы](#архитектура-системы)
-4. [Системные требования](#системные-требования)
-5. [Сборка и запуск](#сборка-и-запуск)
-6. [Конфигурация приложения](#конфигурация-приложения)
-7. [Интерфейс управления (REST API)](#интерфейс-управления-rest-api)
-8. [Транспортный слой (Сетевые протоколы)](#транспортный-слой-сетевые-протоколы)
-9. [Модуль безопасности](#модуль-безопасности)
-10. [Вспомогательные утилиты](#вспомогательные-утилиты)
-
----
-
-## Функциональные возможности
-
-* **Генерация файлов фиксированной ширины:** Формирование структуры реестра, состоящей из заголовка (`Header`), тела с данными клиентов (`BankClient`) и подвала (`Footer`).
-* **Формирование наименований по стандарту:** Генерация имен файлов по маске с использованием юлианской даты и атомарного счетчика.
-* **Расширенная имитация дефектов (7 сценариев сбоя):**
-  * Битый заголовок (`CORRUPTION_HEADER`).
-  * Несовпадение количества записей с подвалом (`INVALID_COUNT_RECORDS`).
-  * Битый подвал (`CORRUPTION_FOOTER`).
-  * Поврежденные клиентские строки (`CORRUPTION_CLIENT_RECORDS`).
-  * Некорректная кодировка (`INCORRECT_CHARSET`: `Windows-1251` или `KOI8-R` вместо `UTF-8`).
-  * Пустой файл (`EMPTY_FILE`: 0 байт).
-  * Файл из символов разметки (`BLANK_FILE`: только пробелы, табуляции и `\r\n`).
-* **Асинхронная обработка (ExecutorService):** Выполнение задач генерации в ограниченном пуле фоновых воркеров без блокировки HTTP-ответа.
-* **Паттерн Visitor:** Инкапсуляция алгоритмов генерации реестров зачисления в классе `GenerateEnrollVisitor`.
-* **Мультиканальная доставка:** Поддержка трех протоколов сетевой передачи на выбор (`FileSender`).
-* **Аутентификация и шифрование:** Защита управляющего API с использованием симметричного шифрования AES-128.
-* **Ротация логов:** Автоматическое архивирование логов при достижении **25 МБ** и хранение архивов до **3 дней**.
-
----
-
-## Используемые библиотеки и технологии
-
-| Библиотека / Технология | Версия | Назначение |
-| :--- | :--- | :--- |
-| **Java 21** | 21 | Основной язык разработки (Records, Pattern Matching, HttpClient) |
-| **Gradle** | 8.x | Система автоматизации сборки и управления зависимостями |
-| **DataFaker** | 2.x | Генерация реалистичных моковых данных клиентов (ФИО, карты) |
-| **Jackson Databind** | 2.15+ | Сериализация и десериализация JSON DTO в REST API |
-| **Apache HttpClient 5** | 5.3+ | Потоковая отправка файлов по протоколу `multipart/form-data` |
-| **gRPC Java / Protobuf** | 1.62+ | Потоковая отправка файлов байтовыми чанками по HTTP/2 |
-| **SLF4J + Logback** | 1.4+ | Логирование с ротацией логов по размеру и времени |
-| **JUnit 5 (Jupiter)** | 5.10+ | Модульное и интеграционное тестирование компонентов |
-
----
-
-## Архитектура системы
-
-Проект реализован без использования ресурсоемких фреймворков и разделен на следующие пакеты:
-
-* `ru.itone.illya4gurenko.config` — Конфигурация (`AppConfig`) и Service Locator (`Base`).
-* `ru.itone.illya4gurenko.dto` — Объекты передачи данных JSON-интерфейса (`ParametersRequestDto`).
-* `ru.itone.illya4gurenko.exception` — Пользовательские исключения (`VisitorTypeException`).
-* `ru.itone.illya4gurenko.handler` — Обработчики HTTP-запросов и пул потоков `ExecutorService`.
-* `ru.itone.illya4gurenko.security` — Компоненты шифрования (AES) и аутентификации.
-* `ru.itone.illya4gurenko.service` — Генераторы данных, реестров и транспортные отправители (`FileSender`).
-* `ru.itone.illya4gurenko.struct_file` — Доменная модель структуры банковского реестра.
-* `ru.itone.illya4gurenko.grpc` — Протобуф-контракты и сетевые gRPC-компоненты.
-
----
-
-## Системные требования
-
-* **JDK:** Java Development Kit 21.
-* **Сборщик:** Gradle (входит в состав проекта через `./gradlew`).
-
----
-
-## Сборка и запуск
-
-### 1. Компиляция Protocol Buffers и сборка проекта
-
-Для генерации Java-классов из `.proto` контрактов и полной сборки JAR-архива выполните команду:
-
-```bash
-./gradlew clean build
+```text
+Generator
+   ↓ файл
+Food-card
+   ↓
+Oracle GRU.GRU_VISTA_TAB
+   ↓
+App-adapter
+   ↓
+Kafka gru.balance.request
 ```
 
-### 2. Запуск приложения
+Альтернативный быстрый сценарий без файла:
 
-```bash
-java -jar build/libs/file-generator-service-1.0.0.jar
+```text
+Generator
+   ↓ JDBC
+Oracle GRU.GRU_VISTA_TAB
 ```
 
-### 3. Переопределение конфигураций через внешние файлы
+## Стек
 
-Параметры и конфигурация логов могут быть переопределены внешними файлами без пересборки JAR:
+- Java 21
+- Gradle
+- Shadow JAR
+- Oracle JDBC (`ojdbc11`)
+- HTTP server без Spring Boot
+- Faker для генерации тестовых данных
+- Docker
 
-```bash
-java -Dgenerator.file.property=/config/application.properties \
-     -Dgenerator.file.logback=/config/file-logback.xml \
-     -jar build/libs/file-generator-service-1.0.0.jar
+## Порт
+
+По умолчанию:
+
+```text
+8080
 ```
 
----
+## REST API
 
-## Конфигурация приложения
+### Генерация файлов
 
-Все ключи настроек сгруппированы под единым префиксом `generator.files.*` в файле `src/main/resources/application.properties`:
+```http
+POST /api/parametres
+Content-Type: application/json
+```
 
-| Параметр | Значение по умолчанию | Описание |
-| :--- | :--- | :--- |
-| `generator.files.server.port` | `8080` | Порт встроенного управляющего HTTP-сервера |
-| `generator.files.server.endpoint.post` | `/api/parametres` | Эндпоинт приема команд на генерацию |
-| `generator.files.file.out` | `./generated` | Директория сохранения сгенерированных файлов |
-| `generator.files.file.charset` | `UTF-8` | Кодировка создаваемых файлов |
-| `generator.files.faker.locale` | `ru` | Локаль генерации моковых данных клиентов |
-| `generator.files.percentage.invalid` | `50` | Процент вероятности генерации невалидных файлов (0-100) |
-| `generator.files.log.file-path` | `./logs/app.log` | Путь к активному файлу лога |
-| `generator.files.logback.config.path` | `./config/file-logback.xml` | Путь к файлу конфигурации Logback XML |
-| `generator.files.crypto.key.path` | `./config/secret.key` | Путь к файлу секретного ключа AES |
-| `generator.files.file.send.chunked.enabled` | `false` | Флаг активации отправки по HTTP Chunked |
-| `generator.files.file.send.multipart.enabled` | `true` | Флаг активации отправки по HTTP Multipart |
-| `generator.files.file.send.grpc.enabled` | `false` | Флаг активации отправки по gRPC Stream |
-| `generator.files.receiver.url` | `https://webhook.site/...` | Целевой HTTP URL-адрес приемника |
-| `generator.files.grpc.receiver.url` | `localhost:9090` | Целевой gRPC адрес приемника (`host:port`) |
-
----
-
-## Интерфейс управления (REST API)
-
-Запуск процесса генерации осуществляется отправкой HTTP POST запроса.
-
-### Параметры запроса
-
-* **URL:** `http://localhost:8080/api/parametres`
-* **Метод:** `POST`
-* **Заголовки (Headers):**
-  * `Content-Type`: `application/json`
-  * `X-Auth-User`: `q1`
-  * `X-Auth-Password`: `<Base64_AES_Encrypted_Password>`
-
-### Тело запроса (JSON)
+Пример:
 
 ```json
 {
-  "codeBank": 100,
-  "codeFilial": 2,
-  "nameAES": "SBER",
-  "countRecords": 1000,
-  "countFiles": 5,
-  "inTime": "2023-12-01T15:00:00"
+  "codeBank": "044525225",
+  "codeFilial": "0001",
+  "nameAES": "TEST_AES",
+  "countRecords": 10,
+  "countFiles": 1,
+  "inTime": null
 }
 ```
 
-### Коды ответов API
+Основные поля:
 
-* `200 OK`: Запрос успешно валидирован, запущен фоновый процесс генерации.
-* `400 Bad Request`: Некорректный JSON или невалидные значения параметров (`countFiles <= 0`).
-* `401 Unauthorized`: Отсутствуют аутентификационные заголовки или передан неверный пароль.
-* `405 Method Not Allowed`: Использован HTTP-метод, отличный от `POST`.
-* `500 Internal Server Error`: Внутренняя ошибка сервера.
+| Поле | Назначение |
+|---|---|
+| `codeBank` | код банка |
+| `codeFilial` | код филиала |
+| `nameAES` | имя/идентификатор AES |
+| `countRecords` | количество записей в одном файле |
+| `countFiles` | количество генерируемых файлов |
+| `inTime` | время отложенной обработки; при `null` создаётся IMMEDIATE-файл |
 
----
+`inTime` записывается в заголовок файла. Сам generator не ждёт этого времени.
 
-## Транспортный слой (Сетевые протоколы)
+Генерация выполняется асинхронно: HTTP-ответ подтверждает принятие задания, а не завершение генерации всех файлов.
 
-Сервис поддерживает три изолированные реализации интерфейса `FileSender`:
+### Прямая генерация в Oracle
 
-### 1. gRPC Client Streaming (`StreamGrpcSenderService`)
-* **Протокол:** HTTP/2 over gRPC.
-* **Формат данных:** Protocol Buffers (`FileChunk`).
-* **Механизм:** Потоковая передача файла с диска байтовыми чанками по 64 Килобайта.
+```http
+POST /api/db/populate
+Content-Type: application/json
+```
 
-### 2. HTTP Multipart (`ApacheMultipartSenderService`)
-* **Протокол:** HTTP/1.1 / HTTP/2.
-* **Формат данных:** `multipart/form-data`.
-* **Библиотека:** Apache HttpClient 5.
-* **Механизм:** Потоковая передача тела файла с диска без полной загрузки в память (OOM-safe).
+Используется для тестирования цепочки:
 
-### 3. HTTP Chunked (`ChunkedFileSenderService`)
-* **Протокол:** HTTP/1.1.
-* **Формат данных:** `text/plain` (Raw Body).
-* **Библиотека:** Java 21 `java.net.http.HttpClient`.
+```text
+Generator → GRU.GRU_VISTA_TAB → App-adapter → Kafka
+```
 
----
+без прохождения через `food-card`.
 
-## Модуль безопасности
+## Формат файла
 
-1. **Шифрование паролей:** Аутентификация использует передачу зашифрованных паролей в заголовке `X-Auth-Password`. Дешифрование выполняется алгоритмом AES-128 с использованием секретного ключа из файла `secret.key`.
-2. **Безопасный режим (Fallback):** Если файл ключа отсутствует по указанному пути, модуль логирует предупреждение и отключает дешифрование.
-3. **Белый список (Whitelist):** Валидация пользователей выполняется по локальной таблице соответствия учетных записей.
+Файл состоит из заголовка и body-записей фиксированной длины.
 
----
+Длина body-записи:
 
-## Вспомогательные утилиты
+```text
+152 символа
+```
 
-В состав исходного кода входят два автономных исполняемых класса для облегчения разработки и тестирования:
+Для чистого позитивного теста:
 
-### 1. `ru.itone.illya4gurenko.security.CryptoApp`
-CLI-утилита для локального шифрования и дешифрования паролей и генерации файла ключа `secret.key`.
+```properties
+generator.files.percentage.invalid=0
+```
 
-### 2. `ru.itone.illya4gurenko.grpc.TestGrpcServer`
-Автономный тестовый gRPC-сервер, поднимающийся на порту `9090`. Используется для локальной проверки правильности отправки байтовых чанков и замера объема полученных данных.
+## Способы доставки файла
+
+Поддерживаются:
+
+- multipart HTTP;
+- raw/chunked HTTP;
+- gRPC.
+
+В текущем тестовом контуре используется multipart:
+
+```properties
+generator.files.file.send.chunked.enabled=false
+generator.files.file.send.multipart.enabled=true
+generator.files.file.send.grpc.enabled=false
+```
+
+Получатель:
+
+```properties
+generator.files.receiver.url=http://food-card-app:8081/api/files/upload
+```
+
+gRPC endpoint при необходимости:
+
+```properties
+generator.files.grpc.receiver.url=food-card-app:9090
+```
+
+> Не рекомендуется одновременно отправлять один и тот же файл через multipart и складывать его в shared-directory, которую сканирует `food-card`: один файл может попасть в обработку двумя путями.
+
+## Актуальный `application.properties`
+
+Для Docker:
+
+```properties
+generator.files.server.port=8080
+
+generator.files.file.out=/app/generated
+generator.files.file.charset=UTF-8
+generator.files.faker.locale=ru
+
+generator.files.server.endpoint.post=/api/parametres
+
+generator.files.log.file-path=./logs/app.log
+generator.files.logback.config.path=./config/file-logback.xml
+generator.files.crypto.key.path=./config/secret.key
+
+generator.files.percentage.invalid=0
+
+generator.files.file.send.chunked.enabled=false
+generator.files.file.send.multipart.enabled=true
+generator.files.file.send.grpc.enabled=false
+
+generator.files.grpc.receiver.url=food-card-app:9090
+generator.files.receiver.url=http://food-card-app:8081/api/files/upload
+
+generator.db.url=jdbc:oracle:thin:@//food_card_oracle:1521/XE
+generator.db.user=acc_app_adapter
+generator.db.password=root
+generator.db.endpoint.post=/api/db/populate
+```
+
+При локальном запуске вместо Docker hostname Oracle используется:
+
+```properties
+generator.db.url=jdbc:oracle:thin:@//localhost:1521/XE
+```
+
+## Внешний конфигурационный файл
+
+Generator читает внешний `application.properties`, только если передан JVM-параметр:
+
+```text
+-Dgenerator.file.property=/app/config/application.properties
+```
+
+Для внешнего Logback:
+
+```text
+-Dgenerator.file.logback=/app/config/file-logback.xml
+```
+
+Пример запуска:
+
+```bash
+java \
+  -Dgenerator.file.property=/app/config/application.properties \
+  -Dgenerator.file.logback=/app/config/file-logback.xml \
+  -jar /app/app.jar
+```
+
+## Сборка
+
+Рекомендуемый способ:
+
+```bash
+./gradlew clean shadowJar -x test
+```
+
+Windows:
+
+```cmd
+gradlew.bat clean shadowJar -x test
+```
+
+Для Shadow JAR рекомендуется:
+
+```gradle
+shadowJar {
+    mergeServiceFiles()
+}
+```
+
+Это необходимо, чтобы JDBC service metadata корректно попала в fat JAR.
+
+Готовый JAR:
+
+```text
+build/libs/generator_mock_file-1.0-all.jar
+```
+
+## Docker
+
+Из-за проблем с загрузкой Gradle-plugin внутри Docker используется runtime-only образ: проект собирается локально, а в image копируется готовый fat JAR.
+
+### Dockerfile
+
+```dockerfile
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY build/libs/generator_mock_file-1.0-all.jar /app/app.jar
+
+RUN mkdir -p /app/config /app/logs /app/generated
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "/app/app.jar"]
+```
+
+### Пример `docker-compose.yml`
+
+```yaml
+version: "3.8"
+
+services:
+  generator-app:
+    build: .
+    container_name: file-generator-service
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./generated:/app/generated
+
+    environment:
+      TZ: Europe/Moscow
+
+    command:
+      - java
+      - -Dgenerator.file.property=/app/config/application.properties
+      - -Dgenerator.file.logback=/app/config/file-logback.xml
+      - -jar
+      - /app/app.jar
+
+    restart: unless-stopped
+
+    networks:
+      - food_bridge
+
+networks:
+  food_bridge:
+    external: true
+```
+
+Если тестируется shared-directory сценарий, `/app/generated` можно примонтировать в общую директорию с `food-card`.
+
+## Запуск
+
+1. Поднять Oracle и `food-card`.
+2. Убедиться, что существует Docker network:
+
+```bash
+docker network inspect food_bridge
+```
+
+3. Собрать JAR:
+
+```cmd
+gradlew.bat clean shadowJar -x test
+```
+
+4. Собрать и запустить generator:
+
+```bash
+docker compose up -d --build
+```
+
+5. Проверить:
+
+```bash
+docker logs -f file-generator-service
+```
+
+## Проверка Docker DNS
+
+Oracle:
+
+```bash
+docker exec file-generator-service getent hosts food_card_oracle
+```
+
+Food-card:
+
+```bash
+docker exec file-generator-service getent hosts food-card-app
+```
+
+## Быстрый E2E-тест через файл
+
+1. Запустить `food-card`.
+2. Запустить `app-adapter`.
+3. Запустить Kafka.
+4. Запустить Docker console consumer на `gru.balance.request`.
+5. Вызвать:
+
+```http
+POST http://localhost:8080/api/parametres
+```
+
+6. Проверить:
+  - generator создал и отправил файл;
+  - food-card обработал его;
+  - в `GRU.GRU_VISTA_TAB` появились строки `WAIT`;
+  - adapter забрал их;
+  - сообщение появилось в `gru.balance.request`.
+
+## Быстрый тест через БД
+
+Вызвать:
+
+```http
+POST http://localhost:8080/api/db/populate
+```
+
+После этого записи должны появиться непосредственно в:
+
+```text
+GRU.GRU_VISTA_TAB
+```
+
+## Полезные замечания
+
+- `food-card-app` — hostname приложения `food-card`; его используют HTTP/gRPC.
+- `food_card_oracle` — hostname Oracle-контейнера; его используют JDBC.
+- Для Oracle XE используется service-name URL:
+
+```text
+jdbc:oracle:thin:@//host:1521/XE
+```
+
+а не SID-форма.

@@ -1,18 +1,30 @@
-version: '3.8'
+version: "3.8"
 
 services:
   generator-app:
     build: .
     container_name: file-generator-service
+
     ports:
       - "8080:8080"
+
     volumes:
       - ./config:/app/config
       - D:/gpb_tasks/shared_exchange:/app/generated
       - ./logs:/app/logs
+
     environment:
-      - TZ=Europe/Moscow
+      TZ: Europe/Moscow
+
+    command:
+      - java
+      - -Dgenerator.file.property=/app/config/application.properties
+      - -Dgenerator.file.logback=/app/config/file-logback.xml
+      - -jar
+      - /app/app.jar
+
     restart: unless-stopped
+
     networks:
       - food_bridge
 

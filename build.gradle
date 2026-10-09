@@ -91,9 +91,12 @@ protobuf {
 }
 
 shadowJar {
-    archiveBaseName.set('generator_mock_file')   // generator
-    archiveVersion.set('1.0')           // -1.0
-    archiveClassifier.set('all')        // -all
+    archiveBaseName.set('generator_mock_file')
+    archiveVersion.set('1.0')
+    archiveClassifier.set('all')
+
+    mergeServiceFiles()
+
     manifest {
         attributes 'Main-Class': 'ru.itone.illya4gurenko.GenerateFilesApp'
     }
